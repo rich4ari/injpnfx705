@@ -15,7 +15,7 @@ import {
   AffiliatePayout,
   AffiliateCommission
 } from '@/types/affiliate';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot, where } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
 interface AffiliateAdminContextType {
@@ -81,68 +81,89 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
   useEffect(() => {
     if (!user) return;
 
-    // Subscribe to affiliates
-    const affiliatesRef = collection(db, 'affiliates');
-    const unsubscribeAffiliates = onSnapshot(
-      affiliatesRef,
-      (snapshot) => {
-        const affiliatesData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as AffiliateUser));
-        
-        setAffiliates(affiliatesData);
-      },
-      (err) => {
-        console.error('Error subscribing to affiliates:', err);
-        setError('Failed to subscribe to affiliates');
-      }
-    );
+    let unsubscribeAffiliates: (() => void) | undefined;
+    let unsubscribeCommissions: (() => void) | undefined;
+    let unsubscribePayouts: (() => void) | undefined;
 
-    // Subscribe to commissions
-    const commissionsRef = collection(db, 'affiliate_commissions');
-    const commissionsQuery = query(commissionsRef, orderBy('createdAt', 'desc'));
-    
-    const unsubscribeCommissions = onSnapshot(
-      commissionsQuery,
-      (snapshot) => {
-        const commissionsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as AffiliateCommission));
-        
-        setCommissions(commissionsData);
-      },
-      (err) => {
-        console.error('Error subscribing to commissions:', err);
-        setError('Failed to subscribe to commissions');
-      }
-    );
+    try {
+      // Subscribe to affiliates
+      const affiliatesRef = collection(db, 'affiliates');
+      unsubscribeAffiliates = onSnapshot(
+        affiliatesRef,
+        (snapshot) => {
+          const affiliatesData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as AffiliateUser));
+          
+          setAffiliates(affiliatesData);
+        },
+        (err) => {
+          console.error('Error subscribing to affiliates:', err);
+          setError('Failed to subscribe to affiliates');
+        }
+      );
 
-    // Subscribe to payouts
-    const payoutsRef = collection(db, 'affiliate_payouts');
-    const payoutsQuery = query(payoutsRef, orderBy('requestedAt', 'desc'));
-    
-    const unsubscribePayouts = onSnapshot(
-      payoutsQuery,
-      (snapshot) => {
-        const payoutsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as AffiliatePayout));
-        
-        setPayouts(payoutsData);
-      },
-      (err) => {
-        console.error('Error subscribing to payouts:', err);
-        setError('Failed to subscribe to payouts');
-      }
-    );
+      // Subscribe to commissions - simple query without ordering to avoid index requirement
+      const commissionsRef = collection(db, 'affiliate_commissions');
+      
+      unsubscribeCommissions = onSnapshot(
+        commissionsRef,
+        (snapshot) => {
+          const commissionsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as AffiliateCommission));
+          
+          // Sort in memory instead of using Firestore ordering
+          commissionsData.sort((a, b) => {
+            const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return bTime - aTime; // Descending order
+          });
+          
+          setCommissions(commissionsData);
+        },
+        (err) => {
+          console.error('Error subscribing to commissions:', err);
+          setError('Failed to subscribe to commissions');
+        }
+      );
+
+      // Subscribe to payouts - simple query without ordering to avoid index requirement
+      const payoutsRef = collection(db, 'affiliate_payouts');
+      
+      unsubscribePayouts = onSnapshot(
+        payoutsRef,
+        (snapshot) => {
+          const payoutsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as AffiliatePayout));
+          
+          // Sort in memory instead of using Firestore ordering
+          payoutsData.sort((a, b) => {
+            const aTime = a.requestedAt ? new Date(a.requestedAt).getTime() : 0;
+            const bTime = b.requestedAt ? new Date(b.requestedAt).getTime() : 0;
+            return bTime - aTime; // Descending order
+          });
+          
+          setPayouts(payoutsData);
+        },
+        (err) => {
+          console.error('Error subscribing to payouts:', err);
+          setError('Failed to subscribe to payouts');
+        }
+      );
+    } catch (err) {
+      console.error('Error setting up admin subscriptions:', err);
+      setError('Failed to set up real-time updates');
+    }
 
     return () => {
-      unsubscribeAffiliates();
-      unsubscribeCommissions();
-      unsubscribePayouts();
+      if (unsubscribeAffiliates) unsubscribeAffiliates();
+      if (unsubscribeCommissions) unsubscribeCommissions();
+      if (unsubscribePayouts) unsubscribePayouts();
     };
   }, [user]);
 

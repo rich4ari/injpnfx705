@@ -97,43 +97,53 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
   useEffect(() => {
     if (!user || !affiliate) return;
 
-    // Subscribe to affiliate stats
-    const unsubscribeStats = subscribeToAffiliateStats(
-      affiliate.id,
-      (updatedAffiliate) => {
-        setAffiliate(updatedAffiliate);
-      }
-    );
+    let unsubscribeStats: (() => void) | undefined;
+    let unsubscribeReferrals: (() => void) | undefined;
+    let unsubscribeCommissions: (() => void) | undefined;
+    let unsubscribePayouts: (() => void) | undefined;
 
-    // Subscribe to referrals
-    const unsubscribeReferrals = subscribeToAffiliateReferrals(
-      affiliate.id,
-      (updatedReferrals) => {
-        setReferrals(updatedReferrals);
-      }
-    );
+    try {
+      // Subscribe to affiliate stats
+      unsubscribeStats = subscribeToAffiliateStats(
+        affiliate.id,
+        (updatedAffiliate) => {
+          setAffiliate(updatedAffiliate);
+        }
+      );
 
-    // Subscribe to commissions
-    const unsubscribeCommissions = subscribeToAffiliateCommissions(
-      affiliate.id,
-      (updatedCommissions) => {
-        setCommissions(updatedCommissions);
-      }
-    );
+      // Subscribe to referrals
+      unsubscribeReferrals = subscribeToAffiliateReferrals(
+        affiliate.id,
+        (updatedReferrals) => {
+          setReferrals(updatedReferrals);
+        }
+      );
 
-    // Subscribe to payouts
-    const unsubscribePayouts = subscribeToAffiliatePayouts(
-      affiliate.id,
-      (updatedPayouts) => {
-        setPayouts(updatedPayouts);
-      }
-    );
+      // Subscribe to commissions
+      unsubscribeCommissions = subscribeToAffiliateCommissions(
+        affiliate.id,
+        (updatedCommissions) => {
+          setCommissions(updatedCommissions);
+        }
+      );
+
+      // Subscribe to payouts
+      unsubscribePayouts = subscribeToAffiliatePayouts(
+        affiliate.id,
+        (updatedPayouts) => {
+          setPayouts(updatedPayouts);
+        }
+      );
+    } catch (err) {
+      console.error('Error setting up subscriptions:', err);
+      setError('Failed to set up real-time updates');
+    }
 
     return () => {
-      unsubscribeStats();
-      unsubscribeReferrals();
-      unsubscribeCommissions();
-      unsubscribePayouts();
+      if (unsubscribeStats) unsubscribeStats();
+      if (unsubscribeReferrals) unsubscribeReferrals();
+      if (unsubscribeCommissions) unsubscribeCommissions();
+      if (unsubscribePayouts) unsubscribePayouts();
     };
   }, [user, affiliate]);
 
