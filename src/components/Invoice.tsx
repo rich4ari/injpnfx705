@@ -116,6 +116,12 @@ const Invoice = ({ order, invoiceNumber }: InvoiceProps) => {
               <span className="font-medium">Metode Pembayaran:</span>
               <span>{order.customer_info.payment_method || 'COD'}</span>
             </div>
+            {order.affiliate_id && (
+              <div className="flex justify-between">
+                <span className="font-medium">Kode Referral:</span>
+                <span className="font-mono">{order.affiliate_id}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -236,6 +242,18 @@ const Invoice = ({ order, invoiceNumber }: InvoiceProps) => {
                 <p><span className="font-medium">Referensi:</span> 24</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Affiliate Information (if available) */}
+      {order.affiliate_id && (
+        <div className="mb-8 page-break-avoid">
+          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+            <h4 className="font-medium text-green-800 mb-2">Informasi Referral:</h4>
+            <p className="text-green-700">
+              Pesanan ini menggunakan kode referral: <span className="font-mono font-bold">{order.affiliate_id}</span>
+            </p>
           </div>
         </div>
       )}

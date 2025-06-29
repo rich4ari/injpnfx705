@@ -33,7 +33,8 @@ const OrdersHistory = () => {
     const matchesSearch = 
       order.customer_info?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer_info?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.id.toLowerCase().includes(searchTerm.toLowerCase());
+      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.affiliate_id && order.affiliate_id.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     
@@ -135,26 +136,28 @@ const OrdersHistory = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="Cari berdasarkan nama, email, atau ID pesanan..."
+                placeholder="Cari berdasarkan nama, email, ID pesanan, atau kode referral..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filter Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="confirmed">Confirmed</SelectItem>
-              <SelectItem value="processing">Processing</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="md:w-48">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Orders List */}
@@ -183,6 +186,11 @@ const OrdersHistory = () => {
                       <p className="text-xs text-gray-500">
                         {new Date(order.created_at).toLocaleString('id-ID')}
                       </p>
+                      {order.affiliate_id && (
+                        <p className="text-xs text-blue-600 mt-1">
+                          Referral: {order.affiliate_id}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       {getStatusBadge(order.status)}
@@ -298,6 +306,15 @@ const OrdersHistory = () => {
                     )}
                   </div>
                 </div>
+                
+                {selectedOrder.affiliate_id && (
+                  <div>
+                    <h4 className="font-medium mb-2">Affiliate Information:</h4>
+                    <div className="bg-blue-50 p-3 rounded">
+                      <p><strong>Referral Code:</strong> {selectedOrder.affiliate_id}</p>
+                    </div>
+                  </div>
+                )}
                 
                 <div>
                   <h4 className="font-medium mb-2">Order Items:</h4>

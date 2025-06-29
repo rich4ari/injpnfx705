@@ -42,6 +42,7 @@ export interface Order {
   referralTransaction?: any;
   invoice_number?: string;
   shipping_fee?: number; // Added shipping fee field
+  affiliate_id?: string; // Added affiliate ID field
 }
 
 export interface OrderItem {
