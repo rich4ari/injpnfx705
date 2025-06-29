@@ -29,7 +29,7 @@ export interface AffiliateReferral {
   orderId?: string;
   orderTotal?: number;
   commissionAmount?: number;
-  status: 'pending' | 'clicked' | 'registered' | 'ordered' | 'approved' | 'rejected' | 'paid';
+  status: 'pending' | 'clicked' | 'registered' | 'ordered' | 'approved' | 'rejected' | 'paid' | 'purchased';
   clickedAt?: string;
   registeredAt?: string;
   orderedAt?: string;

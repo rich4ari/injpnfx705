@@ -17,20 +17,40 @@ const FollowersTable = () => {
   const { followers, loading, referrals } = useAffiliate();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filter followers to only include those with user information
-  const validFollowers = followers.filter(follower => 
-    follower.email && follower.email !== 'Guest User'
-  );
+  // Log the data we're working with
+  console.log('Followers data:', followers);
+  console.log('Referrals data:', referrals);
 
-  const filteredFollowers = validFollowers.filter(follower => 
+  // Filter followers based on search term
+  const filteredFollowers = followers.filter(follower => 
     follower.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     follower.displayName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Count registered and ordered referrals
-  const registeredCount = referrals.filter(ref => 
-    ref.status === 'registered' || ref.status === 'ordered' || ref.status === 'approved'
-  ).length;
+  // Calculate followers from referrals if followers array is empty
+  const calculatedFollowers = referrals
+    .filter(ref => 
+      (ref.status === 'registered' || ref.status === 'ordered' || 
+       ref.status === 'approved' || ref.status === 'purchased') && 
+      ref.referredUserId && 
+      ref.referredUserEmail
+    )
+    .map(ref => ({
+      id: ref.id,
+      userId: ref.referredUserId || '',
+      email: ref.referredUserEmail || '',
+      displayName: ref.referredUserName || ref.referredUserEmail?.split('@')[0] || '',
+      totalOrders: ref.status === 'ordered' || ref.status === 'approved' ? 1 : 0,
+      totalSpent: ref.orderTotal || 0,
+      firstOrderDate: ref.orderedAt || '',
+      lastOrderDate: ref.orderedAt || '',
+      createdAt: ref.createdAt
+    }));
+
+  console.log('Calculated followers from referrals:', calculatedFollowers);
+
+  // Use calculated followers if the followers array is empty
+  const displayFollowers = followers.length > 0 ? filteredFollowers : calculatedFollowers;
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
@@ -66,7 +86,7 @@ const FollowersTable = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
           <CardTitle className="flex items-center">
             <Users className="w-5 h-5 mr-2" />
-            Pengikut Anda ({registeredCount})
+            Pengikut Anda
           </CardTitle>
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -80,14 +100,14 @@ const FollowersTable = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {validFollowers.length === 0 ? (
+        {displayFollowers.length === 0 ? (
           <div className="text-center py-8">
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <h3 className="text-lg font-medium text-gray-900 mb-1">Belum ada pengikut</h3>
             <p className="text-gray-500 text-sm mb-4">
-              Bagikan link affiliate Anda untuk mendapatkan referral
+              Pengikut akan muncul saat ada yang mendaftar melalui link affiliate Anda
             </p>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh Data
             </Button>
@@ -105,7 +125,7 @@ const FollowersTable = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredFollowers.map((follower) => (
+                {displayFollowers.map((follower) => (
                   <TableRow key={follower.id}>
                     <TableCell className="font-medium">
                       {follower.email}

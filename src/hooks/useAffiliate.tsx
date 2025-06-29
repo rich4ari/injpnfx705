@@ -32,7 +32,7 @@ interface AffiliateContextType {
   settings: AffiliateSettings | null;
   joinAffiliate: () => Promise<void>;
   updateBankInfo: (bankInfo: { bankName: string; accountNumber: string; accountName: string }) => Promise<void>;
-  requestPayout: (amount: number, method: string, bankInfo: { bankName: string; accountNumber: string; accountName: string }) => Promise<string>;
+  requestPayout: (amount: number, method: string, bankInfo?: any) => Promise<string>;
   copyReferralLink: () => void;
   referralLink: string;
 }
@@ -79,6 +79,7 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
         // Get followers if affiliate exists
         if (affiliateData) {
           const followersData = await getAffiliateFollowers(affiliateData.id);
+          console.log('Loaded followers data:', followersData);
           setFollowers(followersData);
         }
         
@@ -115,7 +116,35 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
       unsubscribeReferrals = subscribeToAffiliateReferrals(
         affiliate.id,
         (updatedReferrals) => {
+          console.log('Received updated referrals:', updatedReferrals);
           setReferrals(updatedReferrals);
+          
+          // Update followers based on referrals with registered or purchased status
+          const newFollowers = updatedReferrals
+            .filter(ref => 
+              (ref.status === 'registered' || ref.status === 'ordered' || 
+               ref.status === 'approved' || ref.status === 'purchased') && 
+              ref.referredUserId && 
+              ref.referredUserEmail
+            )
+            .map(ref => ({
+              id: ref.id,
+              affiliateId: affiliate.id,
+              userId: ref.referredUserId || '',
+              email: ref.referredUserEmail || '',
+              displayName: ref.referredUserName || ref.referredUserEmail?.split('@')[0] || '',
+              totalOrders: ref.status === 'ordered' || ref.status === 'approved' ? 1 : 0,
+              totalSpent: ref.orderTotal || 0,
+              firstOrderDate: ref.orderedAt || '',
+              lastOrderDate: ref.orderedAt || '',
+              createdAt: ref.createdAt
+            } as AffiliateFollower));
+          
+          console.log('Calculated followers from referrals:', newFollowers);
+          
+          if (newFollowers.length > 0) {
+            setFollowers(newFollowers);
+          }
         }
       );
 
@@ -204,11 +233,7 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
   };
 
   // Request payout
-  const requestPayoutFn = async (amount: number, method: string, bankInfo: {
-    bankName: string;
-    accountNumber: string;
-    accountName: string;
-  }) => {
+  const requestPayoutFn = async (amount: number, method: string, bankInfo?: any) => {
     if (!user || !affiliate) {
       throw new Error('You must be logged in and joined the affiliate program');
     }
@@ -218,7 +243,7 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
         affiliate.id,
         amount,
         method,
-        bankInfo
+        bankInfo || affiliate.bankInfo
       );
       
       return payoutId;

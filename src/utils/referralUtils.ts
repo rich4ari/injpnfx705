@@ -1,4 +1,5 @@
-import { trackReferralClick } from '@/services/affiliateService';
+import { trackReferralClick, registerWithReferral } from '@/services/affiliateService';
+import { auth } from '@/config/firebase';
 
 // Get referral code from URL
 export const getReferralCodeFromUrl = (): string | null => {
@@ -10,6 +11,7 @@ export const getReferralCodeFromUrl = (): string | null => {
 export const storeReferralCode = (referralCode: string): void => {
   localStorage.setItem('referralCode', referralCode);
   localStorage.setItem('referralTimestamp', Date.now().toString());
+  console.log(`Stored referral code in localStorage: ${referralCode}`);
 };
 
 // Get stored referral code
@@ -43,8 +45,6 @@ export const trackReferral = async (referralCode: string): Promise<void> => {
       localStorage.setItem('visitorId', visitorId);
     }
     
-    console.log('Tracking referral with code:', referralCode, 'and visitorId:', visitorId);
-    
     // Track the click
     await trackReferralClick(referralCode, visitorId);
     
@@ -52,6 +52,23 @@ export const trackReferral = async (referralCode: string): Promise<void> => {
     storeReferralCode(referralCode);
     
     console.log('Referral tracked successfully:', referralCode);
+    
+    // If user is already logged in, register them with the referral
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      console.log('User already logged in, registering with referral');
+      try {
+        await registerWithReferral(
+          referralCode,
+          currentUser.uid,
+          currentUser.email || '',
+          currentUser.displayName || currentUser.email?.split('@')[0] || 'User'
+        );
+        console.log('User registered with referral successfully');
+      } catch (registerError) {
+        console.error('Error registering logged-in user with referral:', registerError);
+      }
+    }
   } catch (error) {
     console.error('Error tracking referral:', error);
   }
