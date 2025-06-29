@@ -48,6 +48,8 @@ export const trackReferral = async (referralCode: string): Promise<void> => {
     
     // Store the referral code
     storeReferralCode(referralCode);
+    
+    console.log('Referral tracked successfully:', referralCode);
   } catch (error) {
     console.error('Error tracking referral:', error);
   }
@@ -55,9 +57,16 @@ export const trackReferral = async (referralCode: string): Promise<void> => {
 
 // Check and process referral code from URL
 export const processReferralCode = async (): Promise<void> => {
-  const referralCode = getReferralCodeFromUrl();
-  
-  if (referralCode) {
-    await trackReferral(referralCode);
+  try {
+    const referralCode = getReferralCodeFromUrl();
+    
+    if (referralCode) {
+      console.log('Found referral code in URL:', referralCode);
+      await trackReferral(referralCode);
+    } else {
+      console.log('No referral code found in URL');
+    }
+  } catch (error) {
+    console.error('Error processing referral code:', error);
   }
 };
