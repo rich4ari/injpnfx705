@@ -141,6 +141,7 @@ export const createOrder = async (orderData: {
   shipping_fee?: number;
   payment_proof_url?: string;
   affiliate_id?: string;
+  visitor_id?: string;
 }) => {
   try {
     console.log('Creating order with data:', orderData);
@@ -180,7 +181,8 @@ export const createOrder = async (orderData: {
           orderData.user_id || 'guest',
           docRef.id,
           orderData.total_price,
-          affiliate_id
+          affiliate_id,
+          orderData.visitor_id
         );
         console.log('Affiliate commission processed for order:', docRef.id);
       } catch (affiliateError) {

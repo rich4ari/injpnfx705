@@ -266,19 +266,37 @@ export const createOrderWithReferral = async (
   userId: string,
   orderId: string,
   orderTotal: number,
-  referralCode?: string
+  referralCode?: string,
+  visitorId?: string
 ): Promise<void> => {
   try {
     if (!referralCode) {
       // Check if user was referred
       const referralsRef = collection(db, REFERRALS_COLLECTION);
-      const q = query(
-        referralsRef,
-        where('referredUserId', '==', userId),
-        where('status', 'in', ['registered', 'clicked']),
-        orderBy('createdAt', 'desc'),
-        limit(1)
-      );
+      let q;
+      
+      if (userId !== 'guest' && userId) {
+        // For logged in users, check by referredUserId
+        q = query(
+          referralsRef,
+          where('referredUserId', '==', userId),
+          where('status', 'in', ['registered', 'clicked']),
+          orderBy('createdAt', 'desc'),
+          limit(1)
+        );
+      } else if (visitorId) {
+        // For guest users, check by visitorId
+        q = query(
+          referralsRef,
+          where('visitorId', '==', visitorId),
+          where('status', '==', 'clicked'),
+          orderBy('createdAt', 'desc'),
+          limit(1)
+        );
+      } else {
+        // No way to identify the referral
+        return;
+      }
       
       const querySnapshot = await getDocs(q);
       
@@ -328,12 +346,29 @@ export const createOrderWithReferral = async (
     
     // Find and update referral if exists
     const referralsRef = collection(db, REFERRALS_COLLECTION);
-    const q = query(
-      referralsRef,
-      where('referralCode', '==', referralCode),
-      where('referredUserId', '==', userId),
-      limit(1)
-    );
+    let q;
+    
+    if (userId !== 'guest' && userId) {
+      // For logged in users
+      q = query(
+        referralsRef,
+        where('referralCode', '==', referralCode),
+        where('referredUserId', '==', userId),
+        limit(1)
+      );
+    } else if (visitorId) {
+      // For guest users
+      q = query(
+        referralsRef,
+        where('referralCode', '==', referralCode),
+        where('visitorId', '==', visitorId),
+        where('status', '==', 'clicked'),
+        limit(1)
+      );
+    } else {
+      // No way to identify the referral
+      return;
+    }
     
     const querySnapshot = await getDocs(q);
     
@@ -354,12 +389,34 @@ export const createOrderWithReferral = async (
       await updateDoc(commissionRef, {
         referralId: referralDoc.id
       });
+    } else if (visitorId) {
+      // Create a new referral record for this visitor
+      const newReferral: Partial<AffiliateReferral> = {
+        referralCode,
+        referrerId: affiliate.id,
+        visitorId,
+        orderId,
+        orderTotal,
+        commissionAmount,
+        status: 'ordered',
+        orderedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      const referralDocRef = await addDoc(collection(db, REFERRALS_COLLECTION), newReferral);
+      
+      // Update commission with referral ID
+      await updateDoc(commissionRef, {
+        referralId: referralDocRef.id
+      });
     }
     
     // Update affiliate stats
     await updateDoc(doc(db, AFFILIATES_COLLECTION, affiliate.id), {
       totalCommission: increment(commissionAmount),
       pendingCommission: increment(commissionAmount),
+      totalReferrals: increment(1), // Increment total referrals for orders too
       updatedAt: new Date().toISOString()
     });
   } catch (error) {
@@ -844,26 +901,39 @@ export const getAffiliateFollowers = async (affiliateId: string): Promise<Affili
     for (const doc of querySnapshot.docs) {
       const referral = doc.data() as AffiliateReferral;
       
-      if (referral.referredUserId && !followersMap.has(referral.referredUserId)) {
-        followersMap.set(referral.referredUserId, {
-          id: doc.id,
-          affiliateId,
-          userId: referral.referredUserId,
-          email: referral.referredUserEmail || '',
-          displayName: referral.referredUserName || referral.referredUserEmail?.split('@')[0] || '',
-          totalOrders: 0,
-          totalSpent: 0,
-          firstOrderDate: '',
-          lastOrderDate: '',
-          createdAt: referral.createdAt
-        });
+      // Only include referrals with user information
+      if (referral.referredUserId || referral.referredUserEmail) {
+        const userId = referral.referredUserId || `guest-${referral.visitorId || doc.id}`;
+        
+        if (!followersMap.has(userId)) {
+          followersMap.set(userId, {
+            id: doc.id,
+            affiliateId,
+            userId: referral.referredUserId || userId,
+            email: referral.referredUserEmail || 'Guest User',
+            displayName: referral.referredUserName || referral.referredUserEmail?.split('@')[0] || 'Guest User',
+            totalOrders: referral.orderId ? 1 : 0,
+            totalSpent: referral.orderTotal || 0,
+            firstOrderDate: referral.orderedAt || '',
+            lastOrderDate: referral.orderedAt || '',
+            createdAt: referral.createdAt
+          });
+        } else {
+          // Update existing follower with additional order info if available
+          const existingFollower = followersMap.get(userId)!;
+          
+          if (referral.orderId && !existingFollower.totalOrders) {
+            existingFollower.totalOrders = 1;
+            existingFollower.totalSpent = referral.orderTotal || 0;
+            existingFollower.firstOrderDate = referral.orderedAt || '';
+            existingFollower.lastOrderDate = referral.orderedAt || '';
+          }
+        }
       }
     }
     
     // Get order information for each follower
     const followers = Array.from(followersMap.values());
-    
-    // TODO: Implement order tracking for followers
     
     return followers;
   } catch (error) {

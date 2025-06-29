@@ -49,6 +49,7 @@ const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
+  const [visitorId, setVisitorId] = useState<string | null>(null);
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -92,6 +93,14 @@ const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
       console.log('Found affiliate ID in localStorage:', storedAffiliateId);
       setAffiliateId(storedAffiliateId);
     }
+    
+    // Get or create visitor ID
+    let storedVisitorId = localStorage.getItem('visitorId');
+    if (!storedVisitorId) {
+      storedVisitorId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem('visitorId', storedVisitorId);
+    }
+    setVisitorId(storedVisitorId);
   }, []);
 
   const generateWhatsAppMessage = (data: CheckoutFormData, convertedRupiahValue?: number) => {
@@ -240,10 +249,12 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
         },
         userId: user?.uid,
         shipping_fee: shippingFee || 0,
-        affiliate_id: affiliateId // Include affiliate ID in order data
+        affiliate_id: affiliateId, // Include affiliate ID in order data
+        visitor_id: visitorId // Include visitor ID for tracking guest referrals
       };
 
       console.log('Creating order with affiliate ID:', affiliateId);
+      console.log('Creating order with visitor ID:', visitorId);
       
       const orderId = await createOrder.mutateAsync({
         items: orderData.items,
@@ -251,7 +262,8 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
         customerInfo: orderData.customerInfo,
         userId: orderData.userId,
         shipping_fee: orderData.shipping_fee,
-        affiliate_id: orderData.affiliate_id
+        affiliate_id: orderData.affiliate_id,
+        visitor_id: orderData.visitor_id
       });
 
       // Upload payment proof if provided

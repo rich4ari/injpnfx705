@@ -14,13 +14,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, Users, RefreshCw } from 'lucide-react';
 
 const FollowersTable = () => {
-  const { followers, loading } = useAffiliate();
+  const { followers, loading, referrals } = useAffiliate();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredFollowers = followers.filter(follower => 
+  // Filter followers to only include those with user information
+  const validFollowers = followers.filter(follower => 
+    follower.email && follower.email !== 'Guest User'
+  );
+
+  const filteredFollowers = validFollowers.filter(follower => 
     follower.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     follower.displayName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Count registered and ordered referrals
+  const registeredCount = referrals.filter(ref => 
+    ref.status === 'registered' || ref.status === 'ordered' || ref.status === 'approved'
+  ).length;
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
@@ -56,7 +66,7 @@ const FollowersTable = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
           <CardTitle className="flex items-center">
             <Users className="w-5 h-5 mr-2" />
-            Pengikut Anda
+            Pengikut Anda ({registeredCount})
           </CardTitle>
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -70,7 +80,7 @@ const FollowersTable = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {followers.length === 0 ? (
+        {validFollowers.length === 0 ? (
           <div className="text-center py-8">
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <h3 className="text-lg font-medium text-gray-900 mb-1">Belum ada pengikut</h3>
