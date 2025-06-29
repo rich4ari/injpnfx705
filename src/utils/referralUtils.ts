@@ -43,6 +43,8 @@ export const trackReferral = async (referralCode: string): Promise<void> => {
       localStorage.setItem('visitorId', visitorId);
     }
     
+    console.log('Tracking referral with code:', referralCode, 'and visitorId:', visitorId);
+    
     // Track the click
     await trackReferralClick(referralCode, visitorId);
     
