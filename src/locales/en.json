@@ -1,0 +1,64 @@
+
+{
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "howToBuy": "How to Buy",
+    "affiliate": "Affiliate",
+    "cart": "Cart",
+    "login": "Login",
+    "register": "Register"
+  },
+  "hero": {
+    "title": "Indonesian Taste 🇮🇩",
+    "subtitle": "in the Land of Sakura 🌸",
+    "description": "Discover the taste of home with the most complete collection of authentic Indonesian food for you in Japan",
+    "shopNow": "🛒 Shop Now"
+  },
+  "categories": {
+    "title": "Product Categories",
+    "all": "All Categories"
+  },
+  "products": {
+    "featured": "Featured Products",
+    "catalog": "Product Catalog",
+    "description": "Find your favorite Indonesian food",
+    "search": "Search products...",
+    "notFound": "Products Not Found",
+    "tryDifferent": "Try using different keywords or select another category",
+    "noProducts": "No Products Yet",
+    "comingSoon": "Products will be added soon",
+    "loading": "Loading products...",
+    "viewAll": "View All Products",
+    "addToCart": "Add to Cart",
+    "outOfStock": "Out of Stock",
+    "stock": "Stock"
+  },
+  "whyChoose": {
+    "title": "Why Choose Injapan Food?",
+    "fastDelivery": "Fast Delivery",
+    "fastDeliveryDesc": "Delivery throughout Japan with safe and guaranteed packaging",
+    "qualityGuaranteed": "Quality Guaranteed",
+    "qualityGuaranteedDesc": "All products are authentic Indonesian with the best quality",
+    "support247": "24/7 Service",
+    "support247Desc": "Customer service ready to help you anytime via WhatsApp"
+  },
+  "cta": {
+    "title": "Ready to Taste Indonesian Deliciousness?",
+    "description": "Don't let homesickness get in the way. Order now!",
+    "startShopping": "🛍️ Start Shopping",
+    "howToBuy": "📖 How to Buy"
+  },
+  "footer": {
+    "description": "Trusted online store for high-quality authentic Indonesian food, specifically serving the Indonesian community in Japan.",
+    "quickLinks": "Quick Links",
+    "categories": "Categories",
+    "copyright": "© 2025 Injapan Food. All rights reserved."
+  },
+  "common": {
+    "error": "An Error Occurred",
+    "loading": "Loading...",
+    "refresh": "Refresh Page",
+    "loadingError": "Failed to load data. Please try refreshing the page."
+  }
+}

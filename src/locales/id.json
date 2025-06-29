@@ -1,0 +1,64 @@
+
+{
+  "nav": {
+    "home": "Beranda",
+    "products": "Produk",
+    "howToBuy": "Cara Membeli",
+    "affiliate": "Affiliate",
+    "cart": "Keranjang",
+    "login": "Masuk",
+    "register": "Daftar"
+  },
+  "hero": {
+    "title": "Rasa Indonesia 🇮🇩",
+    "subtitle": "di Tanah Sakura 🌸",
+    "description": "Temukan cita rasa rumah dengan koleksi makanan khas Indonesia terlengkap untuk Anda yang berada di Jepang",
+    "shopNow": "🛒 Belanja Sekarang"
+  },
+  "categories": {
+    "title": "Kategori Produk",
+    "all": "Semua Kategori"
+  },
+  "products": {
+    "featured": "Produk Populer",
+    "catalog": "Katalog Produk",
+    "description": "Temukan makanan Indonesia favorit Anda",
+    "search": "Cari produk...",
+    "notFound": "Produk Tidak Ditemukan",
+    "tryDifferent": "Coba gunakan kata kunci yang berbeda atau pilih kategori lain",
+    "noProducts": "Belum Ada Produk",
+    "comingSoon": "Produk akan segera ditambahkan",
+    "loading": "Memuat produk...",
+    "viewAll": "Lihat Semua Produk",
+    "addToCart": "Tambah ke Keranjang",
+    "outOfStock": "Stok Habis",
+    "stock": "Stok"
+  },
+  "whyChoose": {
+    "title": "Mengapa Pilih Injapan Food?",
+    "fastDelivery": "Pengiriman Cepat",
+    "fastDeliveryDesc": "Pengiriman ke seluruh Jepang dengan packaging aman dan terjamin",
+    "qualityGuaranteed": "Kualitas Terjamin",
+    "qualityGuaranteedDesc": "Semua produk adalah authentic Indonesia dengan kualitas terbaik",
+    "support247": "Pelayanan 24/7",
+    "support247Desc": "Customer service siap membantu Anda kapan saja via WhatsApp"
+  },
+  "cta": {
+    "title": "Siap Merasakan Kelezatan Indonesia?",
+    "description": "Jangan biarkan rindu kampung halaman mengganggu. Pesan sekarang!",
+    "startShopping": "🛍️ Mulai Belanja",
+    "howToBuy": "📖 Cara Membeli"
+  },
+  "footer": {
+    "description": "Toko online terpercaya untuk makanan khas Indonesia berkualitas tinggi, khusus melayani komunitas Indonesia di Jepang.",
+    "quickLinks": "Menu Utama",
+    "categories": "Kategori",
+    "copyright": "© 2025 Injapan Food. All rights reserved."
+  },
+  "common": {
+    "error": "Terjadi Kesalahan",
+    "loading": "Memuat...",
+    "refresh": "Refresh Halaman",
+    "loadingError": "Gagal memuat data. Silakan coba refresh halaman."
+  }
+}
