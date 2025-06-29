@@ -48,6 +48,7 @@ const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
   const [shippingFee, setShippingFee] = useState<number | null>(null);
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
+  const [affiliateId, setAffiliateId] = useState<string | null>(null);
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -84,6 +85,15 @@ const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
     }
   }, [shippingRate]);
 
+  // Get affiliate ID from localStorage
+  useEffect(() => {
+    const storedAffiliateId = localStorage.getItem('referralCode');
+    if (storedAffiliateId) {
+      console.log('Found affiliate ID in localStorage:', storedAffiliateId);
+      setAffiliateId(storedAffiliateId);
+    }
+  }, []);
+
   const generateWhatsAppMessage = (data: CheckoutFormData, convertedRupiahValue?: number) => {
     const productList = cart.map(item => {
       const variants = item.selectedVariants 
@@ -100,6 +110,11 @@ const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
     // Add Rupiah conversion if applicable
     const rupiahInfo = convertedRupiahValue && data.paymentMethod === 'Bank Transfer (Rupiah)'
       ? `\n*TOTAL DALAM RUPIAH: Rp${convertedRupiahValue.toLocaleString('id-ID')}*`
+      : '';
+
+    // Add affiliate info if available
+    const affiliateInfo = affiliateId 
+      ? `\n*KODE REFERRAL: ${affiliateId}*`
       : '';
 
     const message = `Halo Admin Injapan Food
@@ -122,7 +137,7 @@ ${data.paymentMethod}
 ${productList}
 
 *SUBTOTAL BELANJA: ¥${total.toLocaleString()}*${shippingInfo}
-*TOTAL BELANJA: ¥${totalWithShipping.toLocaleString()}*${rupiahInfo}
+*TOTAL BELANJA: ¥${totalWithShipping.toLocaleString()}*${rupiahInfo}${affiliateInfo}
 
 ${data.notes ? `Catatan: ${data.notes}` : ''}
 
@@ -224,15 +239,19 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
           payment_method: data.paymentMethod
         },
         userId: user?.uid,
-        shipping_fee: shippingFee || 0
+        shipping_fee: shippingFee || 0,
+        affiliate_id: affiliateId // Include affiliate ID in order data
       };
 
+      console.log('Creating order with affiliate ID:', affiliateId);
+      
       const orderId = await createOrder.mutateAsync({
         items: orderData.items,
         totalPrice: orderData.totalPrice,
         customerInfo: orderData.customerInfo,
         userId: orderData.userId,
-        shipping_fee: orderData.shipping_fee
+        shipping_fee: orderData.shipping_fee,
+        affiliate_id: orderData.affiliate_id
       });
 
       // Upload payment proof if provided
@@ -480,7 +499,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
                       <img 
                         src={paymentProofPreview} 
                         alt="Preview" 
-                        className="w-40 h-40 object-cover rounded-md border border-gray-200" 
+                        className="w-40 h-40 object-contain rounded-md border border-gray-200" 
                       />
                       <button
                         type="button"
@@ -496,6 +515,16 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Affiliate Info (if available) */}
+          {affiliateId && (
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+              <h4 className="font-medium text-blue-800 mb-2">Informasi Referral:</h4>
+              <p className="text-sm text-blue-700">
+                Anda menggunakan kode referral: <span className="font-mono font-bold">{affiliateId}</span>
+              </p>
             </div>
           )}
 

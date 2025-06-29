@@ -138,9 +138,16 @@ export const createOrder = async (orderData: {
   status?: string;
   shipping_fee?: number;
   payment_proof_url?: string;
+  affiliate_id?: string; // Added affiliate_id field
 }) => {
   try {
     console.log('Creating order with data:', orderData);
+    
+    // Get affiliate_id from localStorage if not provided
+    const storedAffiliateId = localStorage.getItem('referralCode');
+    const affiliate_id = orderData.affiliate_id || storedAffiliateId || null;
+    
+    console.log('Using affiliate_id for order:', affiliate_id);
     
     const ordersRef = collection(db, ORDERS_COLLECTION);
     const docRef = await addDoc(ordersRef, {
@@ -152,11 +159,31 @@ export const createOrder = async (orderData: {
       payment_status: 'pending', // Default payment status
       shipping_fee: orderData.shipping_fee || 0,
       payment_proof_url: orderData.payment_proof_url || null,
+      affiliate_id: affiliate_id, // Include affiliate_id in the order
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
     
     console.log('Order created successfully with ID:', docRef.id);
+    
+    // If there's an affiliate_id, create a commission record
+    if (affiliate_id) {
+      try {
+        // Import the function to avoid circular dependencies
+        const { createOrderWithReferral } = await import('@/services/affiliateService');
+        await createOrderWithReferral(
+          orderData.user_id || 'guest',
+          docRef.id,
+          orderData.total_price,
+          affiliate_id
+        );
+        console.log('Affiliate commission created for order:', docRef.id);
+      } catch (err) {
+        console.error('Error creating affiliate commission:', err);
+        // Don't throw here to avoid failing the order creation
+      }
+    }
+    
     return docRef.id;
   } catch (error) {
     console.error('Error creating order:', error);
