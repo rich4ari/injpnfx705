@@ -32,7 +32,7 @@ interface AffiliateContextType {
   settings: AffiliateSettings | null;
   joinAffiliate: () => Promise<void>;
   updateBankInfo: (bankInfo: { bankName: string; accountNumber: string; accountName: string }) => Promise<void>;
-  requestPayout: (amount: number, method: string) => Promise<string>;
+  requestPayout: (amount: number, method: string, bankInfo: { bankName: string; accountNumber: string; accountName: string }) => Promise<string>;
   copyReferralLink: () => void;
   referralLink: string;
 }
@@ -204,7 +204,11 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
   };
 
   // Request payout
-  const requestPayoutFn = async (amount: number, method: string) => {
+  const requestPayoutFn = async (amount: number, method: string, bankInfo: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+  }) => {
     if (!user || !affiliate) {
       throw new Error('You must be logged in and joined the affiliate program');
     }
@@ -214,7 +218,7 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
         affiliate.id,
         amount,
         method,
-        affiliate.bankInfo
+        bankInfo
       );
       
       return payoutId;
