@@ -166,24 +166,6 @@ export const createOrder = async (orderData: {
     
     console.log('Order created successfully with ID:', docRef.id);
     
-    // If there's an affiliate_id, create a commission record
-    if (affiliate_id) {
-      try {
-        // Import the function to avoid circular dependencies
-        const { createOrderWithReferral } = await import('@/services/affiliateService');
-        await createOrderWithReferral(
-          orderData.user_id || 'guest',
-          docRef.id,
-          orderData.total_price,
-          affiliate_id
-        );
-        console.log('Affiliate commission created for order:', docRef.id);
-      } catch (err) {
-        console.error('Error creating affiliate commission:', err);
-        // Don't throw here to avoid failing the order creation
-      }
-    }
-    
     return docRef.id;
   } catch (error) {
     console.error('Error creating order:', error);
