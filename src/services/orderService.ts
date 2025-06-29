@@ -7,10 +7,12 @@ import {
   updateDoc,
   doc,
   getDoc,
-  where
+  where,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Order } from '@/types';
+import { createOrUpdateAffiliateUser, getAffiliateByReferralCode, createOrderWithReferral } from '@/services/affiliateService';
 
 const ORDERS_COLLECTION = 'orders';
 
@@ -138,7 +140,7 @@ export const createOrder = async (orderData: {
   status?: string;
   shipping_fee?: number;
   payment_proof_url?: string;
-  affiliate_id?: string; // Added affiliate_id field
+  affiliate_id?: string;
 }) => {
   try {
     console.log('Creating order with data:', orderData);
@@ -149,8 +151,8 @@ export const createOrder = async (orderData: {
     
     console.log('Using affiliate_id for order:', affiliate_id);
     
-    const ordersRef = collection(db, ORDERS_COLLECTION);
-    const docRef = await addDoc(ordersRef, {
+    const timestamp = new Date().toISOString();
+    const orderDoc = {
       user_id: orderData.user_id || null,
       customer_info: orderData.customer_info,
       items: orderData.items,
@@ -160,11 +162,32 @@ export const createOrder = async (orderData: {
       shipping_fee: orderData.shipping_fee || 0,
       payment_proof_url: orderData.payment_proof_url || null,
       affiliate_id: affiliate_id, // Include affiliate_id in the order
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    });
+      created_at: timestamp,
+      updated_at: timestamp
+    };
+    
+    // Create the order document
+    const ordersRef = collection(db, ORDERS_COLLECTION);
+    const docRef = await addDoc(ordersRef, orderDoc);
     
     console.log('Order created successfully with ID:', docRef.id);
+    
+    // Process affiliate commission if applicable
+    if (affiliate_id) {
+      try {
+        // Process the affiliate commission
+        await createOrderWithReferral(
+          orderData.user_id || 'guest',
+          docRef.id,
+          orderData.total_price,
+          affiliate_id
+        );
+        console.log('Affiliate commission processed for order:', docRef.id);
+      } catch (affiliateError) {
+        console.error('Error processing affiliate commission:', affiliateError);
+        // Don't fail the order creation if affiliate processing fails
+      }
+    }
     
     return docRef.id;
   } catch (error) {
