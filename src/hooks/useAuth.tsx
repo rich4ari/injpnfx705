@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { 
   User,
@@ -10,6 +9,8 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
+import { getStoredReferralCode } from '@/utils/referralUtils';
+import { registerWithReferral } from '@/services/affiliateService';
 
 interface AuthContextType {
   user: User | null;
@@ -81,6 +82,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
+      
+      // Check if user was referred and process referral
+      const referralCode = getStoredReferralCode();
+      if (referralCode) {
+        try {
+          await registerWithReferral(referralCode, user.uid, email, fullName);
+          console.log('Referral processed for new user:', email);
+        } catch (referralError) {
+          console.error('Error processing referral:', referralError);
+          // Don't fail signup if referral processing fails
+        }
+      }
       
       console.log('Sign up successful and profile created:', user.email);
       return { error: null };

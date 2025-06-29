@@ -79,11 +79,13 @@ const PayoutRequestForm = () => {
     try {
       setIsSubmitting(true);
       
-      await requestPayout(amount, data.method, {
+      const bankInfo = {
         bankName: data.bankName,
         accountNumber: data.accountNumber,
         accountName: data.accountName,
-      });
+      };
+      
+      await requestPayout(amount, data.method, bankInfo);
       
       toast({
         title: 'Berhasil',

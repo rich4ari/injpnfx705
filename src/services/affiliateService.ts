@@ -171,6 +171,7 @@ export const trackReferralClick = async (referralCode: string, visitorId: string
     const newReferral: Partial<AffiliateReferral> = {
       referralCode,
       referrerId: affiliate.id,
+      visitorId,
       status: 'clicked',
       clickedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
@@ -195,31 +196,62 @@ export const trackReferralClick = async (referralCode: string, visitorId: string
 
 // Register user with referral
 export const registerWithReferral = async (
-  referralId: string, 
+  referralCode: string, 
   userId: string, 
-  email: string
+  email: string,
+  displayName: string
 ): Promise<void> => {
   try {
-    const referralRef = doc(db, REFERRALS_COLLECTION, referralId);
-    const referralDoc = await getDoc(referralRef);
-    
-    if (!referralDoc.exists()) {
-      throw new Error('Referral not found');
+    // Find affiliate by referral code
+    const affiliate = await getAffiliateByReferralCode(referralCode);
+    if (!affiliate) {
+      throw new Error('Invalid referral code');
     }
     
-    const referral = referralDoc.data() as AffiliateReferral;
+    // Find existing referral click or create new one
+    const referralsRef = collection(db, REFERRALS_COLLECTION);
+    const q = query(
+      referralsRef,
+      where('referralCode', '==', referralCode),
+      where('status', '==', 'clicked'),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    );
     
-    // Update referral with user info
-    await updateDoc(referralRef, {
-      referredUserId: userId,
-      referredUserEmail: email,
-      status: 'registered',
-      registeredAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+    const querySnapshot = await getDocs(q);
+    let referralId: string;
+    
+    if (!querySnapshot.empty) {
+      // Update existing referral
+      referralId = querySnapshot.docs[0].id;
+      await updateDoc(doc(db, REFERRALS_COLLECTION, referralId), {
+        referredUserId: userId,
+        referredUserEmail: email,
+        referredUserName: displayName,
+        status: 'registered',
+        registeredAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    } else {
+      // Create new referral record
+      const newReferral: Partial<AffiliateReferral> = {
+        referralCode,
+        referrerId: affiliate.id,
+        referredUserId: userId,
+        referredUserEmail: email,
+        referredUserName: displayName,
+        status: 'registered',
+        registeredAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      const referralDocRef = await addDoc(collection(db, REFERRALS_COLLECTION), newReferral);
+      referralId = referralDocRef.id;
+    }
     
     // Update affiliate stats
-    await updateDoc(doc(db, AFFILIATES_COLLECTION, referral.referrerId), {
+    await updateDoc(doc(db, AFFILIATES_COLLECTION, affiliate.id), {
       totalReferrals: increment(1),
       updatedAt: new Date().toISOString()
     });
@@ -535,7 +567,7 @@ export const requestPayout = async (
   affiliateId: string,
   amount: number,
   method: string,
-  bankInfo?: {
+  bankInfo: {
     bankName: string;
     accountNumber: string;
     accountName: string;
@@ -818,7 +850,7 @@ export const getAffiliateFollowers = async (affiliateId: string): Promise<Affili
           affiliateId,
           userId: referral.referredUserId,
           email: referral.referredUserEmail || '',
-          displayName: referral.referredUserEmail?.split('@')[0] || '',
+          displayName: referral.referredUserName || referral.referredUserEmail?.split('@')[0] || '',
           totalOrders: 0,
           totalSpent: 0,
           firstOrderDate: '',

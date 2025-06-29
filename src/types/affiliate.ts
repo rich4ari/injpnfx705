@@ -22,8 +22,10 @@ export interface AffiliateReferral {
   id: string;
   referralCode: string;
   referrerId: string;
+  visitorId?: string;
   referredUserId?: string;
   referredUserEmail?: string;
+  referredUserName?: string;
   orderId?: string;
   orderTotal?: number;
   commissionAmount?: number;
