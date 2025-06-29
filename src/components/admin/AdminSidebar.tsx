@@ -8,7 +8,8 @@ import {
   Upload,
   Trash2,
   Truck,
-  CreditCard
+  CreditCard,
+  Percent
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -57,6 +58,11 @@ const AdminSidebar = () => {
       title: 'Pengaturan Ongkir',
       href: '/admin/shipping-rates',
       icon: Truck,
+    },
+    {
+      title: 'Program Affiliate',
+      href: '/admin/affiliate',
+      icon: Percent,
     },
     {
       title: 'Import/Export',

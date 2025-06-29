@@ -11,6 +11,7 @@ import ProductDetail from '@/pages/ProductDetail';
 import Cart from '@/pages/Cart';
 import Auth from '@/pages/Auth';
 import Orders from '@/pages/Orders';
+import Referral from '@/pages/Referral';
 import HowToBuy from '@/pages/HowToBuy';
 import NotFound from '@/pages/NotFound';
 import CategoryPage from '@/pages/CategoryPage';
@@ -30,8 +31,11 @@ import AdminLogs from '@/pages/admin/AdminLogs';
 import ImportExport from '@/pages/admin/ImportExport';
 import RecycleBin from '@/pages/admin/RecycleBin';
 import ShippingRates from '@/pages/admin/ShippingRates';
+import AffiliateManagement from '@/pages/admin/AffiliateManagement';
 
 import './App.css';
+import { useEffect } from 'react';
+import { processReferralCode } from '@/utils/referralUtils';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +48,11 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  // Process referral code when app loads
+  useEffect(() => {
+    processReferralCode();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -57,6 +66,7 @@ function App() {
               <Route path="/cart" element={<Cart />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/orders" element={<Orders />} />
+              <Route path="/referral" element={<Referral />} />
               <Route path="/how-to-buy" element={<HowToBuy />} />
               
               {/* Category routes */}
@@ -81,6 +91,7 @@ function App() {
               <Route path="/admin/import-export" element={<ImportExport />} />
               <Route path="/admin/recycle-bin" element={<RecycleBin />} />
               <Route path="/admin/shipping-rates" element={<ShippingRates />} />
+              <Route path="/admin/affiliate" element={<AffiliateManagement />} />
               
               {/* 404 route */}
               <Route path="*" element={<NotFound />} />

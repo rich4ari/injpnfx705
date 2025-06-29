@@ -1,0 +1,116 @@
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useAffiliate } from '@/hooks/useAffiliate';
+import { Copy, Share2, QrCode } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import QRCode from 'qrcode.react';
+
+const ReferralLinkCard = () => {
+  const { affiliate, referralLink, copyReferralLink } = useAffiliate();
+  const [showQR, setShowQR] = useState(false);
+
+  const handleCopyLink = () => {
+    copyReferralLink();
+    toast({
+      title: 'Link disalin!',
+      description: 'Link affiliate berhasil disalin ke clipboard',
+    });
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Injapan Food Affiliate',
+          text: 'Belanja makanan Indonesia di Jepang dan dapatkan diskon dengan kode referral saya!',
+          url: referralLink,
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      handleCopyLink();
+    }
+  };
+
+  if (!affiliate) {
+    return null;
+  }
+
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center">
+          <Share2 className="w-5 h-5 mr-2 text-primary" />
+          Link Affiliate Anda
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col space-y-2">
+          <div className="text-sm font-medium text-gray-700">Kode Referral:</div>
+          <div className="bg-gray-100 p-2 rounded-md font-mono text-center font-bold text-primary">
+            {affiliate.referralCode}
+          </div>
+        </div>
+
+        <div className="flex flex-col space-y-2">
+          <div className="text-sm font-medium text-gray-700">Link Affiliate:</div>
+          <div className="flex space-x-2">
+            <Input
+              value={referralLink}
+              readOnly
+              className="font-mono text-sm bg-gray-50"
+            />
+            <Button onClick={handleCopyLink} size="sm" className="shrink-0">
+              <Copy className="w-4 h-4 mr-2" />
+              Salin
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 pt-2">
+          <Button onClick={handleShare} variant="outline" className="w-full">
+            <Share2 className="w-4 h-4 mr-2" />
+            Bagikan Link
+          </Button>
+          <Button 
+            onClick={() => setShowQR(!showQR)} 
+            variant="outline" 
+            className="w-full"
+          >
+            <QrCode className="w-4 h-4 mr-2" />
+            {showQR ? 'Sembunyikan QR' : 'Tampilkan QR'}
+          </Button>
+        </div>
+
+        {showQR && (
+          <div className="flex flex-col items-center pt-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <QRCode 
+                value={referralLink} 
+                size={200} 
+                level="H"
+                includeMargin={true}
+                renderAs="svg"
+              />
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Scan QR code untuk menggunakan link affiliate Anda
+            </p>
+          </div>
+        )}
+
+        <div className="bg-blue-50 p-3 rounded-md text-sm text-blue-700 mt-4">
+          <p>
+            <span className="font-medium">Tip:</span> Bagikan link ini ke teman-teman Anda. 
+            Setiap pembelian melalui link ini akan memberikan Anda komisi!
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ReferralLinkCard;

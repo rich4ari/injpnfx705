@@ -1,0 +1,63 @@
+import { trackReferralClick } from '@/services/affiliateService';
+
+// Get referral code from URL
+export const getReferralCodeFromUrl = (): string | null => {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('ref');
+};
+
+// Store referral code in localStorage
+export const storeReferralCode = (referralCode: string): void => {
+  localStorage.setItem('referralCode', referralCode);
+  localStorage.setItem('referralTimestamp', Date.now().toString());
+};
+
+// Get stored referral code
+export const getStoredReferralCode = (): string | null => {
+  return localStorage.getItem('referralCode');
+};
+
+// Check if referral code is still valid (within 30 days)
+export const isReferralCodeValid = (): boolean => {
+  const timestamp = localStorage.getItem('referralTimestamp');
+  if (!timestamp) return false;
+  
+  const referralDate = new Date(parseInt(timestamp));
+  const now = new Date();
+  
+  // Calculate difference in days
+  const diffTime = now.getTime() - referralDate.getTime();
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  
+  // Valid for 30 days
+  return diffDays <= 30;
+};
+
+// Track referral click
+export const trackReferral = async (referralCode: string): Promise<void> => {
+  try {
+    // Generate a visitor ID (or use existing one)
+    let visitorId = localStorage.getItem('visitorId');
+    if (!visitorId) {
+      visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem('visitorId', visitorId);
+    }
+    
+    // Track the click
+    await trackReferralClick(referralCode, visitorId);
+    
+    // Store the referral code
+    storeReferralCode(referralCode);
+  } catch (error) {
+    console.error('Error tracking referral:', error);
+  }
+};
+
+// Check and process referral code from URL
+export const processReferralCode = async (): Promise<void> => {
+  const referralCode = getReferralCodeFromUrl();
+  
+  if (referralCode) {
+    await trackReferral(referralCode);
+  }
+};

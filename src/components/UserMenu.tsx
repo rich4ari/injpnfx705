@@ -75,7 +75,7 @@ const UserMenu = () => {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleReferralClick}>
           <Percent className="mr-2 h-4 w-4" />
-          <span>Affiliate</span>
+          <span>Program Affiliate</span>
         </DropdownMenuItem>
         {isAdmin && (
           <>
