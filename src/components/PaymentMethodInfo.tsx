@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { CreditCard, RefreshCw, QrCode } from 'lucide-react';
-import QRCode from 'qrcode.react';
 
 interface PaymentMethodInfoProps {
   paymentMethod: string;
@@ -108,12 +107,10 @@ const PaymentMethodInfo = ({ paymentMethod, totalAmount }: PaymentMethodInfoProp
                   <p className="font-medium text-blue-700">Scan QR Code untuk Pembayaran</p>
                   
                   <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <QRCode 
-                      value={`https://injapanfood.com/pay?amount=${totalAmount}&ref=qris-${Date.now()}`} 
-                      size={200} 
-                      level="H"
-                      includeMargin={true}
-                      renderAs="svg"
+                    <img 
+                      src="/lovable-uploads/aiease_1751319905737 (1).jpg" 
+                      alt="QRIS Payment QR Code" 
+                      className="w-[200px] h-auto"
                     />
                   </div>
                   
