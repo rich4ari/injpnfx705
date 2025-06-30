@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const AuthForm = () => {
   const [email, setEmail] = useState('');
@@ -17,16 +17,25 @@ const AuthForm = () => {
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Get referral code from URL if available
+  // Get tab and referral code from URL if available
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(location.search);
+    const tabParam = urlParams.get('tab');
     const refParam = urlParams.get('ref');
+    
+    // Set active tab if specified in URL
+    if (tabParam === 'signup' || tabParam === 'daftar') {
+      document.querySelector('[data-state="inactive"][value="signup"]')?.click();
+    }
+    
+    // Set referral code if present in URL
     if (refParam) {
       setReferralCode(refParam);
       console.log('Referral code found in URL:', refParam);
     }
-  }, []);
+  }, [location.search]);
 
   const getFirebaseErrorMessage = (error: any) => {
     const errorCode = error?.code || '';

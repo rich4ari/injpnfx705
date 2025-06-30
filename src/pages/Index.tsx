@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ProductCard from '@/components/ProductCard';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -11,6 +11,19 @@ const Index = () => {
   const { data: products = [], isLoading: productsLoading, isError: productsError } = useProducts();
   const { t } = useLanguage();
   const categories = getCategoriesWithVariants();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check for referral code in URL and redirect to registration
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const refCode = urlParams.get('ref');
+    
+    if (refCode) {
+      console.log('Referral code detected in URL:', refCode);
+      navigate(`/auth?tab=signup&ref=${refCode}`);
+    }
+  }, [location.search, navigate]);
 
   // Enhanced scroll to top when component mounts
   useEffect(() => {

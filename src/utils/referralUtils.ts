@@ -89,3 +89,8 @@ export const processReferralCode = async (): Promise<void> => {
     console.error('Error processing referral code:', error);
   }
 };
+
+// Redirect to auth page with referral code
+export const redirectToAuthWithReferral = (referralCode: string): void => {
+  window.location.href = `/auth?tab=signup&ref=${referralCode}`;
+};
