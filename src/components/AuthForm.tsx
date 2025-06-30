@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useFirebaseAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,10 +12,21 @@ const AuthForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Get referral code from URL if available
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refParam = urlParams.get('ref');
+    if (refParam) {
+      setReferralCode(refParam);
+      console.log('Referral code found in URL:', refParam);
+    }
+  }, []);
 
   const getFirebaseErrorMessage = (error: any) => {
     const errorCode = error?.code || '';
@@ -85,6 +96,44 @@ const AuthForm = () => {
     setLoading(true);
 
     try {
+      // Validate inputs
+      if (!fullName.trim()) {
+        toast({
+          title: "Pendaftaran Gagal",
+          description: "Nama lengkap wajib diisi",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!email.trim()) {
+        toast({
+          title: "Pendaftaran Gagal",
+          description: "Email wajib diisi",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (password.length < 6) {
+        toast({
+          title: "Pendaftaran Gagal",
+          description: "Password minimal 6 karakter",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Store referral code in localStorage if provided
+      if (referralCode) {
+        localStorage.setItem('referralCode', referralCode);
+        localStorage.setItem('referralTimestamp', Date.now().toString());
+        console.log('Stored referral code before signup:', referralCode);
+      }
+
       const { error } = await signUp(email, password, fullName);
 
       if (error) {
@@ -104,6 +153,7 @@ const AuthForm = () => {
         setEmail('');
         setPassword('');
         setFullName('');
+        setReferralCode('');
         // Redirect to home
         navigate('/');
       }
@@ -195,7 +245,7 @@ const AuthForm = () => {
               <CardContent className="space-y-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div>
-                    <Label htmlFor="signup-name">Nama Lengkap</Label>
+                    <Label htmlFor="signup-name">Nama Lengkap *</Label>
                     <Input
                       id="signup-name"
                       type="text"
@@ -206,7 +256,7 @@ const AuthForm = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">Email *</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -217,7 +267,7 @@ const AuthForm = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">Password *</Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -227,6 +277,19 @@ const AuthForm = () => {
                       placeholder="Password (min. 6 karakter)"
                       minLength={6}
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="signup-referral">Kode Referral (Opsional)</Label>
+                    <Input
+                      id="signup-referral"
+                      type="text"
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value)}
+                      placeholder="Masukkan kode referral jika ada"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Dapatkan promo spesial dengan menggunakan kode referral
+                    </p>
                   </div>
                   <Button 
                     type="submit" 

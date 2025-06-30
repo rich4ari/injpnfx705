@@ -3,10 +3,16 @@ import { useAuth } from '@/hooks/useFirebaseAuth';
 import { useEffect } from 'react';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { Navigate } from 'react-router-dom';
+import { processReferralCode } from '@/utils/referralUtils';
 
 const Auth = () => {
   const { user } = useAuth();
   const db = getFirestore();
+  
+  // Process referral code from URL if present
+  useEffect(() => {
+    processReferralCode();
+  }, []);
   
   // Ensure user profile is created in Firestore
   useEffect(() => {
