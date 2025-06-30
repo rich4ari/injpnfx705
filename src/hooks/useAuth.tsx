@@ -1,14 +1,11 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
+  User,
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
-  User,
-  updateProfile,
-  setPersistence,
-  browserLocalPersistence
+  updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
@@ -20,112 +17,70 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
-}
-
-// Initialize Firebase with error handling
-let app;
-let auth;
-
-try {
-  console.log('Initializing Firebase with config:', {
-    projectId: firebaseConfig.projectId,
-    authDomain: firebaseConfig.authDomain,
-    hasApiKey: !!firebaseConfig.apiKey
-  });
-  
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  
-  // Set persistence to LOCAL to ensure auth state persists across browser sessions
-  setPersistence(auth, browserLocalPersistence).catch((error) => {
-    console.error('Error setting auth persistence:', error);
-  });
-  
-  console.log('Firebase initialized successfully');
-} catch (error) {
-  console.error('Firebase initialization error:', error);
+  userProfile: any;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth) {
-      console.error('Firebase auth not initialized');
-      setLoading(false);
-      return () => {};
-    }
-
-    console.log('Setting up Firebase auth state listener');
-    
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('Firebase auth state changed:', {
-        userEmail: user?.email,
-        userUid: user?.uid,
-        isSignedIn: !!user,
-        timestamp: new Date().toISOString()
-      });
-      
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed:', user?.email);
       setUser(user);
-      setLoading(false);
-    }, (error) => {
-      console.error('Auth state change error:', error);
+      
+      if (user) {
+        // Fetch user profile from Firestore
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            setUserProfile(userDoc.data());
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      } else {
+        setUserProfile(null);
+      }
+      
       setLoading(false);
     });
 
-    return () => {
-      console.log('Cleaning up Firebase auth listener');
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    if (!auth) {
-      return { error: new Error('Firebase auth not initialized') };
-    }
-
     try {
       console.log('Attempting Firebase sign in with email:', email);
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Sign in successful:', result.user.email);
+      await signInWithEmailAndPassword(auth, email, password);
       return { error: null };
     } catch (error: any) {
-      console.error('Firebase sign in error:', {
-        code: error.code,
-        message: error.message,
-        email
-      });
+      console.error('Firebase sign in error:', error);
       return { error };
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    if (!auth) {
-      return { error: new Error('Firebase auth not initialized') };
-    }
-
     try {
       console.log('Attempting Firebase sign up with email:', email);
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Update user profile with full name
-      if (user) {
-        await updateProfile(user, {
-          displayName: fullName
-        });
-        
-        // Create user document in Firestore
-        await setDoc(doc(db, 'users', user.uid), {
-          full_name: fullName,
-          email: email,
-          role: 'user',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-      }
+      // Update user profile
+      await updateProfile(user, {
+        displayName: fullName
+      });
+
+      // Create user document in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        full_name: fullName,
+        email: email,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
       
       // Check if user came from a referral link
       const referralCode = getStoredReferralCode();
@@ -148,27 +103,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('Sign up successful and profile created:', user.email);
       return { error: null };
     } catch (error: any) {
-      console.error('Firebase sign up error:', {
-        code: error.code,
-        message: error.message,
-        email
-      });
+      console.error('Firebase sign up error:', error);
       return { error };
     }
   };
 
   const signOut = async () => {
-    if (!auth) {
-      console.error('Firebase auth not initialized for signout');
-      return;
-    }
-
     try {
       console.log('Attempting Firebase sign out');
       await firebaseSignOut(auth);
       console.log('Sign out successful');
+      window.location.href = '/auth';
     } catch (error) {
       console.error('Firebase sign out error:', error);
+      window.location.href = '/auth';
     }
   };
 
@@ -178,7 +126,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signIn,
       signUp,
       signOut,
-      loading
+      loading,
+      userProfile
     }}>
       {children}
     </AuthContext.Provider>
