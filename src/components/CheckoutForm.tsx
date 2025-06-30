@@ -475,6 +475,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
                     <SelectItem value="COD (Cash on Delivery)">COD (Cash on Delivery)</SelectItem>
                     <SelectItem value="Bank Transfer (Rupiah)">Bank Transfer (Rupiah)</SelectItem>
                     <SelectItem value="Bank Transfer (Yucho / ゆうちょ銀行)">Bank Transfer (Yucho / ゆうちょ銀行)</SelectItem>
+                    <SelectItem value="QRIS / QR Code">QRIS / QR Code</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

@@ -153,13 +153,20 @@ export const createOrder = async (orderData: {
     console.log('Using affiliate_id for order:', affiliate_id);
     
     const timestamp = new Date().toISOString();
+    
+    // Set payment status based on payment method
+    let payment_status = 'pending';
+    if (orderData.customer_info.payment_method === 'COD (Cash on Delivery)') {
+      payment_status = 'verified'; // COD doesn't need verification
+    }
+    
     const orderDoc = {
       user_id: orderData.user_id || null,
       customer_info: orderData.customer_info,
       items: orderData.items,
       total_price: orderData.total_price,
       status: orderData.status || 'pending',
-      payment_status: 'pending', // Default payment status
+      payment_status: payment_status,
       shipping_fee: orderData.shipping_fee || 0,
       payment_proof_url: orderData.payment_proof_url || null,
       affiliate_id: affiliate_id, // Include affiliate_id in the order

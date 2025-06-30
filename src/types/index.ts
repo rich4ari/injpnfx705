@@ -35,7 +35,7 @@ export interface Order {
   payment_status?: 'pending' | 'verified' | 'rejected';
   payment_proof_url?: string;
   shipping_address: ShippingAddress;
-  payment_method: 'credit_card' | 'paypal' | 'cod';
+  payment_method: 'credit_card' | 'paypal' | 'cod' | 'qris';
   created_at: string;
   updated_at: string;
   customer_info: CustomerInfo;
@@ -43,6 +43,7 @@ export interface Order {
   invoice_number?: string;
   shipping_fee?: number; // Added shipping fee field
   affiliate_id?: string; // Added affiliate ID field
+  visitor_id?: string; // Added visitor ID field for tracking
 }
 
 export interface OrderItem {

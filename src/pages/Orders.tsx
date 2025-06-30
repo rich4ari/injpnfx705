@@ -288,57 +288,33 @@ const Orders = () => {
                         </div>
                       </div>
 
-                      {/* Payment Proof Section */}
+                      {/* Payment Status Section */}
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                        <h4 className="font-medium text-blue-800 mb-3">Bukti Pembayaran:</h4>
-                        
-                        {order.payment_proof_url ? (
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-16 h-16 bg-white rounded-md border border-blue-200 overflow-hidden">
-                                <img 
-                                  src={order.payment_proof_url} 
-                                  alt="Bukti Pembayaran" 
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-blue-700">Bukti pembayaran telah diupload</p>
-                                <p className="text-xs text-blue-600">
-                                  Status: {getPaymentStatus(order) === 'verified' ? 'Terverifikasi' : 
-                                          getPaymentStatus(order) === 'rejected' ? 'Ditolak' : 
-                                          'Menunggu verifikasi'}
-                                </p>
-                              </div>
-                            </div>
+                        <h4 className="font-medium text-blue-800 mb-3">Informasi Pembayaran:</h4>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-blue-700">
+                              Metode: {order.customer_info.payment_method || 'Tidak tersedia'}
+                            </p>
+                            <OrderPaymentStatus 
+                              status={getPaymentStatus(order)} 
+                              paymentProofUrl={order.payment_proof_url}
+                              onViewProof={() => order.payment_proof_url && handleViewPaymentProof(order.payment_proof_url)}
+                            />
+                          </div>
+                          
+                          {!order.payment_proof_url && order.status === 'pending' && (
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => handleViewPaymentProof(order.payment_proof_url || '')}
+                              onClick={() => handleUploadPaymentProof(order.id)}
                               className="text-blue-600 border-blue-200 hover:bg-blue-50"
                             >
-                              <Eye className="w-4 h-4 mr-2" />
-                              Lihat Bukti
+                              <Upload className="w-4 h-4 mr-2" />
+                              Upload Bukti
                             </Button>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <p className="text-sm text-blue-700">
-                              Belum ada bukti pembayaran yang diupload.
-                            </p>
-                            {order.status === 'pending' && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleUploadPaymentProof(order.id)}
-                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                              >
-                                <Upload className="w-4 h-4 mr-2" />
-                                Upload Bukti
-                              </Button>
-                            )}
-                          </div>
-                        )}
+                          )}
+                        </div>
 
                         {/* Payment Proof Uploader */}
                         {showUploader === order.id && (

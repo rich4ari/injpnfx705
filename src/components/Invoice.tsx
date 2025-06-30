@@ -116,6 +116,20 @@ const Invoice = ({ order, invoiceNumber }: InvoiceProps) => {
               <span className="font-medium">Metode Pembayaran:</span>
               <span>{order.customer_info.payment_method || 'COD'}</span>
             </div>
+            {order.payment_status && (
+              <div className="flex justify-between">
+                <span className="font-medium">Status Pembayaran:</span>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  order.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  order.payment_status === 'verified' ? 'bg-green-100 text-green-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {order.payment_status === 'pending' ? 'Menunggu Verifikasi' :
+                   order.payment_status === 'verified' ? 'Terverifikasi' :
+                   'Ditolak'}
+                </span>
+              </div>
+            )}
             {order.affiliate_id && (
               <div className="flex justify-between">
                 <span className="font-medium">Kode Referral:</span>
@@ -240,6 +254,13 @@ const Invoice = ({ order, invoiceNumber }: InvoiceProps) => {
                 <p><span className="font-medium">Bank code:</span> 11170</p>
                 <p><span className="font-medium">Branch code:</span> 118</p>
                 <p><span className="font-medium">Referensi:</span> 24</p>
+              </div>
+            )}
+            
+            {order.customer_info.payment_method === 'QRIS / QR Code' && (
+              <div className="mt-2 text-blue-700">
+                <p><span className="font-medium">Metode:</span> QRIS / QR Code</p>
+                <p><span className="font-medium">Status:</span> {order.payment_status === 'verified' ? 'Terverifikasi' : order.payment_status === 'rejected' ? 'Ditolak' : 'Menunggu Verifikasi'}</p>
               </div>
             )}
           </div>

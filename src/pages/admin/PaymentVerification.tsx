@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { Search, Eye, CheckCircle, XCircle, Clock, Package, FileText, CreditCard } from 'lucide-react';
+import { Search, Eye, CheckCircle, XCircle, Clock, Package, FileText, CreditCard, QrCode } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import InvoiceModal from '@/components/InvoiceModal';
 import { Order } from '@/types';
@@ -58,6 +58,16 @@ const PaymentVerification = () => {
         <span>{label}</span>
       </Badge>
     );
+  };
+
+  const getPaymentMethodIcon = (method: string) => {
+    if (method.includes('QRIS') || method.includes('QR Code')) {
+      return <QrCode className="w-4 h-4 mr-2 text-blue-500" />;
+    } else if (method.includes('Bank')) {
+      return <CreditCard className="w-4 h-4 mr-2 text-green-500" />;
+    } else {
+      return <CreditCard className="w-4 h-4 mr-2 text-gray-500" />;
+    }
   };
 
   const handleVerifyPayment = async (orderId: string) => {
@@ -214,7 +224,10 @@ const PaymentVerification = () => {
                     <div>
                       <h4 className="font-medium mb-2">Informasi Pembayaran:</h4>
                       <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-sm"><strong>Metode:</strong> {order.customer_info?.payment_method || 'Tidak ada informasi'}</p>
+                        <div className="flex items-center">
+                          {getPaymentMethodIcon(order.customer_info?.payment_method || '')}
+                          <p className="text-sm"><strong>Metode:</strong> {order.customer_info?.payment_method || 'Tidak ada informasi'}</p>
+                        </div>
                         {order.payment_proof_url ? (
                           <div className="mt-2">
                             <p className="text-sm font-medium text-gray-700 mb-2">Bukti Pembayaran:</p>

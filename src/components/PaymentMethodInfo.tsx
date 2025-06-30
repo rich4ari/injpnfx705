@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { CreditCard, RefreshCw } from 'lucide-react';
+import { CreditCard, RefreshCw, QrCode } from 'lucide-react';
+import QRCode from 'qrcode.react';
 
 interface PaymentMethodInfoProps {
   paymentMethod: string;
@@ -93,6 +94,47 @@ const PaymentMethodInfo = ({ paymentMethod, totalAmount }: PaymentMethodInfoProp
                   <p>Nama: Heri Kurnianta</p>
                   <p>Bank code: 11170</p>
                   <p>Branch code: 118</p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {paymentMethod === 'QRIS / QR Code' && (
+            <>
+              <Separator />
+              
+              <div className="bg-blue-50 p-3 rounded-md">
+                <div className="flex flex-col items-center space-y-3">
+                  <p className="font-medium text-blue-700">Scan QR Code untuk Pembayaran</p>
+                  
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <QRCode 
+                      value={`https://injapanfood.com/pay?amount=${totalAmount}&ref=qris-${Date.now()}`} 
+                      size={200} 
+                      level="H"
+                      includeMargin={true}
+                      renderAs="svg"
+                    />
+                  </div>
+                  
+                  <div className="text-center">
+                    <p className="font-bold text-blue-700 text-lg">
+                      ¥{totalAmount.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Scan dengan aplikasi e-wallet atau mobile banking Anda
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mt-4 text-sm text-blue-600">
+                  <p className="font-medium">Petunjuk Pembayaran:</p>
+                  <ol className="list-decimal pl-5 space-y-1">
+                    <li>Scan QR code di atas dengan aplikasi pembayaran Anda</li>
+                    <li>Masukkan jumlah pembayaran sesuai total belanja</li>
+                    <li>Selesaikan pembayaran dan simpan bukti pembayaran</li>
+                    <li>Upload bukti pembayaran pada form di bawah</li>
+                  </ol>
                 </div>
               </div>
             </>
