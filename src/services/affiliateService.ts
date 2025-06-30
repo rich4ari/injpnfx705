@@ -172,7 +172,7 @@ export const trackReferralClick = async (referralCode: string, visitorId: string
     const newReferral: Partial<AffiliateReferral> = {
       referralCode,
       referrerId: affiliate.id,
-      visitorId: visitorId,
+      visitorId,
       status: 'clicked',
       clickedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),

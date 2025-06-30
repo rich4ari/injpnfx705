@@ -133,7 +133,7 @@ const FollowersTable = () => {
                     <TableCell>{follower.displayName}</TableCell>
                     <TableCell>{follower.totalOrders}</TableCell>
                     <TableCell>
-                      {follower.totalSpent > 0 
+                      {follower.totalSpent 
                         ? `¥${follower.totalSpent.toLocaleString()}`
                         : '-'
                       }

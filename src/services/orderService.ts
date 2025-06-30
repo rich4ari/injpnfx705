@@ -141,6 +141,7 @@ export const createOrder = async (orderData: {
   shipping_fee?: number;
   payment_proof_url?: string;
   affiliate_id?: string;
+  visitor_id?: string;
 }) => {
   try {
     console.log('Creating order with data:', orderData);
@@ -162,6 +163,7 @@ export const createOrder = async (orderData: {
       shipping_fee: orderData.shipping_fee || 0,
       payment_proof_url: orderData.payment_proof_url || null,
       affiliate_id: affiliate_id, // Include affiliate_id in the order
+      visitor_id: orderData.visitor_id || null, // Include visitor_id for tracking
       created_at: timestamp,
       updated_at: timestamp
     };

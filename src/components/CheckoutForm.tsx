@@ -86,7 +86,7 @@ const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
     }
   }, [shippingRate]);
 
-  // Get affiliate ID from localStorage
+  // Get affiliate ID from localStorage if not provided
   useEffect(() => {
     const storedAffiliateId = localStorage.getItem('referralCode');
     if (storedAffiliateId) {
