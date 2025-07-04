@@ -7,6 +7,7 @@ import { Order } from '@/types';
 import { useOrderOperations } from '@/hooks/useOrderOperations';
 import { CheckCircle, XCircle, Clock, User, Mail, Phone, MapPin, Package, FileText } from 'lucide-react';
 import InvoiceModal from '@/components/InvoiceModal';
+import { toast } from '@/hooks/use-toast';
 
 interface OrderConfirmationProps {
   order: Order;
@@ -21,18 +22,42 @@ const OrderConfirmation = ({ order, onConfirmSuccess }: OrderConfirmationProps) 
   const handleConfirm = () => {
     setIsConfirming(true);
     confirmOrder(order.id).then(() => {
+      toast({
+        title: "Order dikonfirmasi & stok dikurangi!",
+        description: "Pesanan berhasil dikonfirmasi dan stok produk telah diperbarui.",
+        variant: "default"
+      });
       if (onConfirmSuccess) {
         onConfirmSuccess();
       }
     }).catch(error => {
       console.error('Error confirming order:', error);
+      toast({
+        title: "Gagal konfirmasi pesanan",
+        description: `${error.message || "Terjadi kesalahan saat mengkonfirmasi pesanan"}`,
+        variant: "destructive"
+      });
     }).finally(() => {
       setIsConfirming(false);
     });
   };
 
   const handleCancel = () => {
-    cancelOrder(order.id);
+    cancelOrder(order.id)
+      .then(() => {
+        toast({
+          title: "Pesanan dibatalkan",
+          description: "Pesanan berhasil dibatalkan",
+          variant: "default"
+        });
+      })
+      .catch(error => {
+        toast({
+          title: "Gagal membatalkan pesanan",
+          description: `${error.message || "Terjadi kesalahan saat membatalkan pesanan"}`,
+          variant: "destructive"
+        });
+      });
   };
 
   const getStatusBadge = (status: string) => {

@@ -13,6 +13,15 @@ import EmptyState from '@/components/EmptyState';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 
+// Function to show success notification when stock is updated
+const showStockUpdateSuccess = () => {
+  toast({
+    title: "Stok Berhasil Diperbarui",
+    description: "Stok produk telah dikurangi sesuai dengan pesanan yang dikonfirmasi",
+    variant: "default"
+  });
+};
+
 const OrderConfirmationPage = () => {
   const { data: pendingOrders = [], isLoading, error } = usePendingOrders();
   const [showInvoice, setShowInvoice] = useState(false);
@@ -133,6 +142,7 @@ const OrderConfirmationPage = () => {
                 <OrderConfirmation 
                   order={order} 
                   onConfirmSuccess={() => {
+                    showStockUpdateSuccess();
                     showStockUpdateSuccess();
                     // Add to confirming orders set to prevent double confirmation
                     setConfirmingOrders(prev => new Set(prev).add(order.id));
