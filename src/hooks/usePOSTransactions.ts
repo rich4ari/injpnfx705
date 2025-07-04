@@ -10,6 +10,7 @@ export const usePOSTransactions = (date?: string) => {
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     
     try {
       // Set date range for query
@@ -22,42 +23,60 @@ export const usePOSTransactions = (date?: string) => {
       const startDateStr = selectedDate.toISOString();
       const endDateStr = nextDay.toISOString();
       
-      // Create query
+      console.log(`Fetching POS transactions between ${startDateStr} and ${endDateStr}`);
+      
+      // Create query - using simple query to avoid index requirements
       const transactionsRef = collection(db, 'pos_transactions');
-      const q = query(
-        transactionsRef
-        // Removed orderBy to avoid index requirements
-      );
+      const q = query(transactionsRef);
       
       // Set up real-time listener
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        let transactionData: POSTransaction[] = [];
-        snapshot.forEach((doc) => {
-          transactionData.push({ 
-            id: doc.id, 
-            ...doc.data() 
-          } as POSTransaction);
-        });
-        
-        // Filter by date client-side instead of in the query
-        if (date) {
-          transactionData = transactionData.filter(t => {
-            if (!t.createdAt) return false;
-            const txDate = new Date(t.createdAt);
-            return txDate >= startDateStr && txDate < endDateStr;
+        try {
+          if (snapshot.empty) {
+            console.log('No POS transactions found');
+            setTransactions([]);
+            setLoading(false);
+            return;
+          }
+          
+          let transactionData: POSTransaction[] = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            // Ensure all required fields exist
+            if (data && data.createdAt && data.items && data.totalAmount) {
+              transactionData.push({ 
+                id: doc.id, 
+                ...data 
+              } as POSTransaction);
+            } else {
+              console.warn(`Skipping transaction ${doc.id} due to missing required fields`);
+            }
           });
-        }
+          
+          // Filter by date client-side instead of in the query
+          if (date) {
+            transactionData = transactionData.filter(t => {
+              if (!t.createdAt) return false;
+              const txDate = new Date(t.createdAt);
+              return txDate >= new Date(startDateStr) && txDate < new Date(endDateStr);
+            });
+          }
 
-        // Sort manually since we're not using orderBy
-        transactionData.sort((a, b) => {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
-        
-        console.log(`Loaded ${transactionData.length} POS transactions`);
-        setTransactions(transactionData);
-        setLoading(false);
+          // Sort manually since we're not using orderBy
+          transactionData.sort((a, b) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+          
+          console.log(`Loaded ${transactionData.length} POS transactions`);
+          setTransactions(transactionData);
+          setLoading(false);
+        } catch (err) {
+          console.error('Error processing transaction data:', err);
+          setError(err as Error);
+          setLoading(false);
+        }
       }, (err) => {
-        console.error('Error fetching POS transactions:', err);
+        console.error('Error in POS transactions snapshot:', err);
         setError(err as Error);
         setLoading(false);
       });

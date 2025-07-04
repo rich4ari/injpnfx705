@@ -20,11 +20,6 @@ service cloud.firestore {
       allow update, delete: if request.auth != null;
     }
     
-    // Allow POS transactions to be read/written by authenticated users
-    match /pos_transactions/{transactionId} {
-      allow read, write, create, update, delete: if request.auth != null;
-    }
-    
     // Allow authenticated users to access recycle bin with full permissions
     match /recycle_bin/{itemId} {
       allow read, write, create, update, delete: if request.auth != null;
@@ -72,6 +67,11 @@ service cloud.firestore {
     match /affiliate_payouts/{payoutId} {
       allow read: if true;
       allow write, create, update: if true;
+    }
+    
+    // Allow POS transactions to be read/written by authenticated users
+    match /pos_transactions/{transactionId} {
+      allow read, write, create, update, delete: if request.auth != null;
     }
   }
 }
