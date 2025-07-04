@@ -11,6 +11,7 @@ import { Order } from '@/types';
 import ErrorState from '@/components/ErrorState';
 import EmptyState from '@/components/EmptyState';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
 
 const OrderConfirmationPage = () => {
   const { data: pendingOrders = [], isLoading, error } = usePendingOrders();
