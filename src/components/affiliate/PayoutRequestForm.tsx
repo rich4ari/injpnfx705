@@ -246,13 +246,12 @@ const PayoutRequestForm = () => {
 
               <Button 
                 type="submit" 
-                className="w-full" 
-                    {t('affiliate.requestPayoutButton')}
+                className="w-full"
               >
                 {isSubmitting ? 'Memproses...' : 'Ajukan Pencairan'}
               </Button>
             </form>
-                    {t('buttons.processing')}
+          </Form>
         )}
       </CardContent>
     </Card>
