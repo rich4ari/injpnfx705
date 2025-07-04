@@ -9,7 +9,8 @@ import {
   Trash2,
   Truck,
   CreditCard,
-  Percent
+  Percent,
+  DollarSign
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -63,6 +64,12 @@ const AdminSidebar = () => {
       title: 'Program Affiliate',
       href: '/admin/affiliate',
       icon: Percent,
+    },
+    {
+      title: 'Laporan Keuangan',
+      href: '/admin/financial-reports',
+      icon: DollarSign,
+      description: 'Financial reports'
     },
     {
       title: 'Import/Export',

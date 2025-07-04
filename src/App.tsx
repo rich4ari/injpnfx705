@@ -32,6 +32,7 @@ import ImportExport from '@/pages/admin/ImportExport';
 import RecycleBin from '@/pages/admin/RecycleBin';
 import ShippingRates from '@/pages/admin/ShippingRates';
 import AffiliateManagement from '@/pages/admin/AffiliateManagement';
+import FinancialReports from '@/pages/admin/FinancialReports';
 
 import './App.css';
 import { useEffect } from 'react';
@@ -92,6 +93,7 @@ function App() {
               <Route path="/admin/recycle-bin" element={<RecycleBin />} />
               <Route path="/admin/shipping-rates" element={<ShippingRates />} />
               <Route path="/admin/affiliate" element={<AffiliateManagement />} />
+              <Route path="/admin/financial-reports" element={<FinancialReports />} />
               
               {/* 404 route */}
               <Route path="*" element={<NotFound />} />

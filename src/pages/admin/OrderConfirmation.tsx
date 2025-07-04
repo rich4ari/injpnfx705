@@ -143,7 +143,6 @@ const OrderConfirmationPage = () => {
                   order={order} 
                   onConfirmSuccess={() => {
                     showStockUpdateSuccess();
-                    showStockUpdateSuccess();
                     // Add to confirming orders set to prevent double confirmation
                     setConfirmingOrders(prev => new Set(prev).add(order.id));
                   }}
