@@ -33,7 +33,12 @@ export const useOrderOperations = () => {
           
           console.log('Checking stock for items in order:', orderData.items);
           
-          // Check stock for each item in the order
+          // PHASE 1: Read all product documents first
+          const productUpdates: Array<{
+            productRef: any;
+            updates: any;
+          }> = [];
+          
           for (const item of orderData.items) {
             // Skip if no product_id (backward compatibility)
             if (!item.product_id) {
@@ -85,7 +90,7 @@ export const useOrderOperations = () => {
                 throw new Error(`Not enough stock for ${item.name} (${variantName}). Available: ${variant.stock}, Requested: ${item.quantity}`);
               }
               
-              // Update variant stock
+              // Prepare variant stock update
               const updatedVariants = [...productData.variants];
               updatedVariants[variantIndex] = {
                 ...variant,
@@ -94,10 +99,13 @@ export const useOrderOperations = () => {
               
               console.log(`Updating variant stock for ${item.name} (${variantName}): ${variant.stock} -> ${variant.stock - item.quantity}`);
               
-              // Update the product with new variants array
-              transaction.update(productRef, { 
-                variants: updatedVariants,
-                updated_at: new Date().toISOString()
+              // Store update for later execution
+              productUpdates.push({
+                productRef,
+                updates: { 
+                  variants: updatedVariants,
+                  updated_at: new Date().toISOString()
+                }
               });
               
             } else {
@@ -109,15 +117,24 @@ export const useOrderOperations = () => {
               
               console.log(`Updating main product stock for ${item.name}: ${productData.stock} -> ${productData.stock - item.quantity}`);
               
-              // Update main product stock
-              transaction.update(productRef, { 
-                stock: productData.stock - item.quantity,
-                updated_at: new Date().toISOString()
+              // Store update for later execution
+              productUpdates.push({
+                productRef,
+                updates: { 
+                  stock: productData.stock - item.quantity,
+                  updated_at: new Date().toISOString()
+                }
               });
             }
           }
           
-          // Update order status to confirmed
+          // PHASE 2: Execute all writes after all reads are complete
+          // Update all product stocks
+          for (const update of productUpdates) {
+            transaction.update(update.productRef, update.updates);
+          }
+          
+          // Finally, update order status to confirmed
           console.log('Updating order status to confirmed:', orderId);
           transaction.update(orderRef, {
             status: 'confirmed',
