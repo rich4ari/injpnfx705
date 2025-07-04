@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Upload, X, Image } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 import { updatePaymentProof } from '@/services/orderService';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '@/config/firebase';
@@ -15,6 +16,7 @@ interface PaymentProofUploaderProps {
 
 const PaymentProofUploader = ({ orderId, onSuccess }: PaymentProofUploaderProps) => {
   const [file, setFile] = useState<File | null>(null);
+  const { t } = useLanguage();
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -26,8 +28,8 @@ const PaymentProofUploader = ({ orderId, onSuccess }: PaymentProofUploaderProps)
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!validTypes.includes(selectedFile.type)) {
       toast({
-        title: "Format file tidak valid",
-        description: "Harap unggah file gambar (JPG, PNG, WEBP, GIF)",
+        title: t('payment.invalidFormat'),
+        description: t('payment.validFormatsMessage'),
         variant: "destructive"
       });
       return;
@@ -36,8 +38,8 @@ const PaymentProofUploader = ({ orderId, onSuccess }: PaymentProofUploaderProps)
     // Validate file size (max 5MB)
     if (selectedFile.size > 5 * 1024 * 1024) {
       toast({
-        title: "Ukuran file terlalu besar",
-        description: "Ukuran file maksimal 5MB",
+        title: t('payment.fileTooLarge'),
+        description: t('payment.maxFileSize'),
         variant: "destructive"
       });
       return;
@@ -72,8 +74,8 @@ const PaymentProofUploader = ({ orderId, onSuccess }: PaymentProofUploaderProps)
       await updatePaymentProof(orderId, downloadURL);
 
       toast({
-        title: "Bukti Pembayaran Berhasil Diunggah",
-        description: "Bukti pembayaran Anda telah diunggah dan menunggu verifikasi admin",
+        title: t('payment.proofUploaded'),
+        description: t('payment.proofAwaitingVerification'),
       });
 
       // Reset form
@@ -85,8 +87,8 @@ const PaymentProofUploader = ({ orderId, onSuccess }: PaymentProofUploaderProps)
     } catch (error) {
       console.error('Error uploading payment proof:', error);
       toast({
-        title: "Gagal Mengunggah Bukti Pembayaran",
-        description: "Terjadi kesalahan saat mengunggah bukti pembayaran. Silakan coba lagi.",
+        title: t('payment.uploadFailed'),
+        description: t('payment.uploadErrorMessage'),
         variant: "destructive"
       });
     } finally {
@@ -97,11 +99,11 @@ const PaymentProofUploader = ({ orderId, onSuccess }: PaymentProofUploaderProps)
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="payment-proof" className="text-base font-medium">
-          Unggah Bukti Pembayaran
+        <Label htmlFor="payment-proof" className="text-base font-medium mb-2 block">
+          {t('payment.uploadPaymentProof')}
         </Label>
-        <p className="text-sm text-gray-600 mt-1 mb-3">
-          Unggah bukti transfer atau pembayaran Anda untuk memverifikasi pesanan
+        <p className="text-sm text-gray-600 mb-3">
+          {t('payment.uploadProofDescription')}
         </p>
 
         {!preview ? (
@@ -114,15 +116,15 @@ const PaymentProofUploader = ({ orderId, onSuccess }: PaymentProofUploaderProps)
               className="hidden"
             />
             <Label
-              htmlFor="payment-proof"
-              className="flex flex-col items-center cursor-pointer"
+              htmlFor="payment-proof" 
+              className="flex flex-col items-center cursor-pointer p-4"
             >
-              <Image className="w-12 h-12 text-gray-400 mb-2" />
-              <span className="text-sm font-medium text-gray-700">
-                Klik untuk memilih file
+              <Image className="w-12 h-12 text-gray-400 mb-3" />
+              <span className="text-sm font-medium text-gray-700 mb-1">
+                {t('payment.clickToSelectFile')}
               </span>
               <span className="text-xs text-gray-500 mt-1">
-                JPG, PNG, WEBP, GIF (Maks. 5MB)
+                {t('checkout.paymentProofFormats')}
               </span>
             </Label>
           </div>
@@ -150,17 +152,17 @@ const PaymentProofUploader = ({ orderId, onSuccess }: PaymentProofUploaderProps)
         disabled={!file || uploading}
         className="w-full bg-green-600 hover:bg-green-700"
       >
-        {uploading ? (
-          <>
+        {uploading ? 
+          <div className="flex items-center justify-center">
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-            Mengunggah...
-          </>
-        ) : (
-          <>
+            <span>{t('payment.uploading')}</span>
+          </div>
+         : 
+          <div className="flex items-center justify-center">
             <Upload className="w-4 h-4 mr-2" />
-            Unggah Bukti Pembayaran
-          </>
-        )}
+            <span>{t('payment.uploadPaymentProof')}</span>
+          </div>
+        }
       </Button>
     </div>
   );

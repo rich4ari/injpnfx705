@@ -377,7 +377,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
                   >
                     <FormControl>
                       <SelectTrigger className="bg-white">
-                        <SelectValue placeholder={t('checkout.selectPrefecture')} />
+                      <SelectValue placeholder={t('checkout.selectPrefecture')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-white border shadow-lg max-h-60 z-50">
@@ -478,7 +478,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
                     <SelectItem value="COD (Cash on Delivery)">{t('checkout.cod')}</SelectItem>
                     <SelectItem value="Bank Transfer (Rupiah)">{t('checkout.bankTransferRupiah')}</SelectItem>
                     <SelectItem value="Bank Transfer (Yucho / ゆうちょ銀行)">{t('checkout.bankTransferYucho')}</SelectItem>
-                    <SelectItem value="QRIS / QR Code (IDR)">{t('checkout.qris')}</SelectItem>
+                    <SelectItem value="QRIS / QR Code">{t('checkout.qris')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
