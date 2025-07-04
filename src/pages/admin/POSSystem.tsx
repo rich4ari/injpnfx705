@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useFirebaseAuth';
 import { useProducts } from '@/hooks/useProducts';
-import { collection, addDoc, runTransaction, doc, Timestamp, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, addDoc, runTransaction, doc, onSnapshot, query, setDoc } from 'firebase/firestore';
 import RealtimeClock from '@/components/admin/RealtimeClock';
 import { db } from '@/config/firebase';
 import { toast } from '@/hooks/use-toast';
@@ -99,6 +99,7 @@ const POSSystem = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState<POSTransaction | null>(null);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
 
   // Helper function to remove undefined values from objects and arrays
@@ -147,6 +148,7 @@ const POSSystem = () => {
   // Load recent transactions
   useEffect(() => {
     if (!user) return;
+    setIsLoadingTransactions(true);
     
     console.log('Loading transactions for date:', selectedDate);
     
@@ -163,8 +165,7 @@ const POSSystem = () => {
     
     const transactionsRef = collection(db, 'pos_transactions');
     
-    // Simplify the query to avoid index issues
-    // First, try without date filters to see if collection exists and has data
+    // Use a simple query without complex filters to avoid index requirements
     const q = query(transactionsRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -172,19 +173,24 @@ const POSSystem = () => {
       const transactions: POSTransaction[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        console.log('Transaction data:', { id: doc.id, ...data });
+        console.log('Raw transaction data:', { id: doc.id, ...data });
         
         // Filter manually by date on the client side
-        const createdAt = data.createdAt;
-        if (createdAt && 
-            createdAt >= today.toISOString() && 
-            createdAt < tomorrow.toISOString()) {
-          transactions.push({ id: doc.id, ...data } as POSTransaction);
+        try {
+          const createdAt = data.createdAt;
+          if (createdAt && 
+              createdAt >= today.toISOString() && 
+              createdAt < tomorrow.toISOString()) {
+            transactions.push({ id: doc.id, ...data } as POSTransaction);
+          }
+        } catch (err) {
+          console.error('Error processing transaction:', err);
         }
       });
       
       console.log('Filtered transactions:', transactions.length);
       setRecentTransactions(transactions);
+      setIsLoadingTransactions(false);
     }, (error) => {
       console.error('Error fetching transactions:', error);
       toast({
@@ -192,6 +198,7 @@ const POSSystem = () => {
         description: 'Gagal memuat transaksi terbaru',
         variant: 'destructive'
       });
+      setIsLoadingTransactions(false);
     });
 
     return () => unsubscribe();
@@ -313,8 +320,8 @@ const POSSystem = () => {
     setIsProcessing(true);
 
     try {
-      // Create transaction object
-      const transaction: Omit<POSTransaction, 'id'> = {
+      // Create transaction object with all required fields
+      const transactionData = {
         items: cart.map(item => ({
           id: item.id,
           product: {
@@ -338,7 +345,7 @@ const POSSystem = () => {
       };
 
       // Add cash details if payment method is cash
-      if (paymentMethod === 'cash') {
+      if (paymentMethod === 'cash' && cashReceived) {
         transaction.cashReceived = Number(cashReceived);
         transaction.change = changeAmount;
       }
@@ -369,25 +376,20 @@ const POSSystem = () => {
           });
         }
         
-        // Create transaction record
-        // We need to create a document reference first
-        const posTransactionsRef = collection(db, 'pos_transactions');
-        
-        // Create a new document with auto-generated ID
+        // Create a new document reference with auto-generated ID
         const newDocRef = doc(collection(db, 'pos_transactions'));
         console.log('Created new document reference:', newDocRef.id);
         
-        // Prepare transaction data and remove undefined values
-        const transactionDataToStore = {
-          items: transaction.items,
-          totalAmount: transaction.totalAmount,
-          paymentMethod: transaction.paymentMethod,
-          status: transaction.status,
-          createdAt: transaction.createdAt,
-          cashierId: transaction.cashierId,
-          cashierName: transaction.cashierName,
-          ...(transaction.cashReceived && { cashReceived: transaction.cashReceived }),
-          ...(transaction.change && { change: transaction.change })
+        // Clean the transaction data to remove any undefined values
+        const cleanedData = removeUndefined({
+          items: transactionData.items,
+          totalAmount: transactionData.totalAmount,
+          paymentMethod: transactionData.paymentMethod,
+          status: transactionData.status,
+          createdAt: transactionData.createdAt,
+          cashierId: transactionData.cashierId,
+          cashierName: transactionData.cashierName,
+          ...(paymentMethod === 'cash' ? { cashReceived: Number(cashReceived), change: changeAmount } : {})
         };
         
         // Clean the data to remove any undefined values
@@ -396,7 +398,7 @@ const POSSystem = () => {
         console.log('Storing transaction data:', cleanedTransactionData);
         
         // Then set the document data using the cleaned transaction object
-        transaction.set(newDocRef, cleanedTransactionData);
+        transaction.set(newDocRef, cleanedData);
       });
 
       // Show success message
@@ -408,7 +410,7 @@ const POSSystem = () => {
       // Show receipt
       setCurrentReceipt({
         ...transaction as POSTransaction,
-        id: Date.now().toString() // This is just for the receipt display
+        id: Date.now().toString() // Temporary ID for receipt display
       });
       setShowReceipt(true);
 
@@ -619,7 +621,7 @@ const POSSystem = () => {
                 </Card>
               </div>
 
-              {/* Shopping Cart */}
+              {/* Shopping Cart Panel */}
               <div className="lg:col-span-1">
                 <Card className="h-full flex flex-col">
                   <CardHeader className="pb-3 border-b">
@@ -757,7 +759,7 @@ const POSSystem = () => {
                     <Receipt className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <h3 className="text-lg font-medium text-gray-900 mb-1">Belum Ada Transaksi</h3>
                     <p className="text-gray-500 text-sm">
-                      Belum ada transaksi POS pada tanggal ini
+                      {isLoadingTransactions ? 'Memuat data transaksi...' : 'Belum ada transaksi POS pada tanggal ini'}
                     </p>
                   </div>
                 ) : (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, query, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { POSTransaction } from '@/types';
 
@@ -25,8 +25,8 @@ export const usePOSTransactions = (date?: string) => {
       // Create query
       const transactionsRef = collection(db, 'pos_transactions');
       const q = query(
-        transactionsRef,
-        orderBy('createdAt', 'desc') // Remove the where clauses that require composite index
+        transactionsRef
+        // Removed orderBy to avoid index requirements
       );
       
       // Set up real-time listener
@@ -39,7 +39,7 @@ export const usePOSTransactions = (date?: string) => {
           } as POSTransaction);
         });
         
-        // Filter by date client-side
+        // Filter by date client-side instead of in the query
         if (date) {
           transactionData = transactionData.filter(t => {
             if (!t.createdAt) return false;
@@ -47,6 +47,11 @@ export const usePOSTransactions = (date?: string) => {
             return txDate >= startDateStr && txDate < endDateStr;
           });
         }
+
+        // Sort manually since we're not using orderBy
+        transactionData.sort((a, b) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
         
         console.log(`Loaded ${transactionData.length} POS transactions`);
         setTransactions(transactionData);
@@ -89,6 +94,11 @@ export const getPOSTransactionsByDateRange = async (startDate: Date, endDate: Da
       if (data.createdAt && data.createdAt >= startDateStr && data.createdAt < endDateStr) {
         transactions.push({ id: doc.id, ...data } as POSTransaction);
       }
+    });
+    
+    // Sort manually by date
+    transactions.sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
     
     console.log(`Found ${transactions.length} transactions in date range`);
