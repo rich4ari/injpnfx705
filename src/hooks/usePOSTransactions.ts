@@ -26,17 +26,29 @@ export const usePOSTransactions = (date?: string) => {
       const transactionsRef = collection(db, 'pos_transactions');
       const q = query(
         transactionsRef,
-        where('createdAt', '>=', startDateStr),
-        where('createdAt', '<', endDateStr),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc') // Remove the where clauses that require composite index
       );
       
       // Set up real-time listener
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        const transactionData: POSTransaction[] = [];
+        let transactionData: POSTransaction[] = [];
         snapshot.forEach((doc) => {
-          transactionData.push({ id: doc.id, ...doc.data() } as POSTransaction);
+          transactionData.push({ 
+            id: doc.id, 
+            ...doc.data() 
+          } as POSTransaction);
         });
+        
+        // Filter by date client-side
+        if (date) {
+          transactionData = transactionData.filter(t => {
+            if (!t.createdAt) return false;
+            const txDate = new Date(t.createdAt);
+            return txDate >= startDateStr && txDate < endDateStr;
+          });
+        }
+        
+        console.log(`Loaded ${transactionData.length} POS transactions`);
         setTransactions(transactionData);
         setLoading(false);
       }, (err) => {
@@ -62,21 +74,24 @@ export const getPOSTransactionsByDateRange = async (startDate: Date, endDate: Da
     const startDateStr = startDate.toISOString();
     const endDateStr = endDate.toISOString();
     
+    console.log('Fetching POS transactions from', startDateStr, 'to', endDateStr);
+    
     const transactionsRef = collection(db, 'pos_transactions');
-    const q = query(
-      transactionsRef,
-      where('createdAt', '>=', startDateStr),
-      where('createdAt', '<', endDateStr),
-      orderBy('createdAt', 'desc')
-    );
+    // Use a simpler query to avoid index requirements
+    const q = query(transactionsRef);
     
     const snapshot = await getDocs(q);
     const transactions: POSTransaction[] = [];
     
     snapshot.forEach((doc) => {
-      transactions.push({ id: doc.id, ...doc.data() } as POSTransaction);
+      const data = doc.data();
+      // Filter by date manually
+      if (data.createdAt && data.createdAt >= startDateStr && data.createdAt < endDateStr) {
+        transactions.push({ id: doc.id, ...data } as POSTransaction);
+      }
     });
     
+    console.log(`Found ${transactions.length} transactions in date range`);
     return transactions;
   } catch (error) {
     console.error('Error fetching POS transactions by date range:', error);

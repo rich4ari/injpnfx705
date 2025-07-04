@@ -146,26 +146,43 @@ const POSSystem = () => {
   // Load recent transactions
   useEffect(() => {
     if (!user) return;
-
+    
+    console.log('Loading transactions for date:', selectedDate);
+    
     const today = new Date(selectedDate);
     today.setHours(0, 0, 0, 0);
     
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
+    
+    console.log('Date range:', {
+      from: today.toISOString(),
+      to: tomorrow.toISOString()
+    });
+    
     const transactionsRef = collection(db, 'pos_transactions');
-    const q = query(
-      transactionsRef,
-      where('createdAt', '>=', today.toISOString()),
-      where('createdAt', '<', tomorrow.toISOString()),
-      orderBy('createdAt', 'desc')
-    );
+    
+    // Simplify the query to avoid index issues
+    // First, try without date filters to see if collection exists and has data
+    const q = query(transactionsRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log('Snapshot received, docs count:', snapshot.size);
       const transactions: POSTransaction[] = [];
       snapshot.forEach((doc) => {
-        transactions.push({ id: doc.id, ...doc.data() } as POSTransaction);
+        const data = doc.data();
+        console.log('Transaction data:', { id: doc.id, ...data });
+        
+        // Filter manually by date on the client side
+        const createdAt = data.createdAt;
+        if (createdAt && 
+            createdAt >= today.toISOString() && 
+            createdAt < tomorrow.toISOString()) {
+          transactions.push({ id: doc.id, ...data } as POSTransaction);
+        }
       });
+      
+      console.log('Filtered transactions:', transactions.length);
       setRecentTransactions(transactions);
     }, (error) => {
       console.error('Error fetching transactions:', error);
@@ -297,7 +314,20 @@ const POSSystem = () => {
     try {
       // Create transaction object
       const transaction: Omit<POSTransaction, 'id'> = {
-        items: cart,
+        items: cart.map(item => ({
+          id: item.id,
+          product: {
+            id: item.product.id,
+            name: item.product.name,
+            price: item.product.price,
+            image_url: item.product.image_url,
+            category: item.product.category,
+            stock: item.product.stock
+          },
+          quantity: item.quantity,
+          price: item.price,
+          totalPrice: item.totalPrice
+        })),
         totalAmount: cartTotal,
         paymentMethod,
         status: 'completed',
@@ -341,7 +371,10 @@ const POSSystem = () => {
         // Create transaction record
         // We need to create a document reference first
         const posTransactionsRef = collection(db, 'pos_transactions');
-        const newDocRef = doc(posTransactionsRef);
+        
+        // Create a new document with auto-generated ID
+        const newDocRef = doc(collection(db, 'pos_transactions'));
+        console.log('Created new document reference:', newDocRef.id);
         
         // Prepare transaction data and remove undefined values
         const transactionDataToStore = {
@@ -359,6 +392,8 @@ const POSSystem = () => {
         // Clean the data to remove any undefined values
         const cleanedTransactionData = removeUndefined(transactionDataToStore);
         
+        console.log('Storing transaction data:', cleanedTransactionData);
+        
         // Then set the document data using the cleaned transaction object
         transaction.set(newDocRef, cleanedTransactionData);
       });
@@ -372,7 +407,7 @@ const POSSystem = () => {
       // Show receipt
       setCurrentReceipt({
         ...transaction as POSTransaction,
-        id: Date.now().toString()
+        id: Date.now().toString() // This is just for the receipt display
       });
       setShowReceipt(true);
 
@@ -383,8 +418,8 @@ const POSSystem = () => {
     } catch (error) {
       console.error('Error processing payment:', error);
       toast({
-        title: 'Transaksi Gagal',
-        description: error instanceof Error ? error.message : 'Terjadi kesalahan saat memproses pembayaran',
+        title: 'Error processing payment:',
+        description: error instanceof Error ? error.message : String(error),
         variant: 'destructive'
       });
     } finally {
