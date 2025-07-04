@@ -57,7 +57,8 @@ import {
   Receipt,
   Printer,
   AlertOctagon,
-  Download
+  Download,
+  XCircle
 } from 'lucide-react';
 
 // Cart item interface
