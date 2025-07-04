@@ -5,7 +5,7 @@ import { toast } from '@/hooks/use-toast';
 
 export const useOrderOperations = () => {
   const queryClient = useQueryClient();
-  const db = getFirestore();
+  const db = getFirestore(); 
 
   const confirmOrderMutation = useMutation({ 
     mutationFn: async (orderId: string) => {
@@ -15,8 +15,11 @@ export const useOrderOperations = () => {
           // Get the order document
           const orderRef = doc(db, 'orders', orderId);
           const orderDoc = await transaction.get(orderRef);
+
+          console.log('Confirming order:', orderId);
           
           if (!orderDoc.exists()) {
+            console.error('Order not found:', orderId);
             throw new Error('Order not found');
           }
           
@@ -24,18 +27,25 @@ export const useOrderOperations = () => {
           
           // Check if order is already confirmed
           if (orderData.status === 'confirmed') {
+            console.warn('Order already confirmed:', orderId);
             throw new Error('Order already confirmed');
           }
+          
+          console.log('Checking stock for items in order:', orderData.items);
           
           // Check stock for each item in the order
           for (const item of orderData.items) {
             // Skip if no product_id (backward compatibility)
-            if (!item.product_id) continue;
+            if (!item.product_id) {
+              console.warn('Item has no product_id, skipping stock check:', item);
+              continue;
+            }
             
             const productRef = doc(db, 'products', item.product_id);
             const productDoc = await transaction.get(productRef);
             
             if (!productDoc.exists()) {
+              console.error(`Product ${item.name} (${item.product_id}) not found`);
               throw new Error(`Product ${item.name} not found`);
             }
             
@@ -49,13 +59,21 @@ export const useOrderOperations = () => {
               const variantName = item.selectedVariantName || 
                                  (item.selectedVariants.variant ? item.selectedVariants.variant : null);
               
+              console.log('Checking variant stock:', {
+                productName: item.name,
+                variantName,
+                selectedVariants: item.selectedVariants
+              });
+              
               if (!variantName) {
+                console.error(`Variant name not found for ${item.name}`);
                 throw new Error(`Variant name not found for ${item.name}`);
               }
               
               const variantIndex = productData.variants.findIndex(v => v.name === variantName);
               
               if (variantIndex === -1) {
+                console.error(`Variant ${variantName} not found for ${item.name}`);
                 throw new Error(`Variant ${variantName} not found for ${item.name}`);
               }
               
@@ -63,6 +81,7 @@ export const useOrderOperations = () => {
               
               // Check if there's enough stock
               if (variant.stock < item.quantity) {
+                console.error(`Not enough stock for ${item.name} (${variantName}). Available: ${variant.stock}, Requested: ${item.quantity}`);
                 throw new Error(`Not enough stock for ${item.name} (${variantName}). Available: ${variant.stock}, Requested: ${item.quantity}`);
               }
               
@@ -71,7 +90,9 @@ export const useOrderOperations = () => {
               updatedVariants[variantIndex] = {
                 ...variant,
                 stock: variant.stock - item.quantity
-              };
+              }; 
+              
+              console.log(`Updating variant stock for ${item.name} (${variantName}): ${variant.stock} -> ${variant.stock - item.quantity}`);
               
               // Update the product with new variants array
               transaction.update(productRef, { 
@@ -82,8 +103,11 @@ export const useOrderOperations = () => {
             } else {
               // Check if there's enough stock for the main product
               if (productData.stock < item.quantity) {
+                console.error(`Not enough stock for ${item.name}. Available: ${productData.stock}, Requested: ${item.quantity}`);
                 throw new Error(`Not enough stock for ${item.name}. Available: ${productData.stock}, Requested: ${item.quantity}`);
               }
+              
+              console.log(`Updating main product stock for ${item.name}: ${productData.stock} -> ${productData.stock - item.quantity}`);
               
               // Update main product stock
               transaction.update(productRef, { 
@@ -94,6 +118,7 @@ export const useOrderOperations = () => {
           }
           
           // Update order status to confirmed
+          console.log('Updating order status to confirmed:', orderId);
           transaction.update(orderRef, {
             status: 'confirmed',
             confirmed_at: new Date().toISOString(),
@@ -103,7 +128,7 @@ export const useOrderOperations = () => {
         
         return orderId;
       } catch (error) {
-        console.error('Transaction failed:', error);
+        console.error('Order confirmation transaction failed:', error);
         throw error;
       }
     },
@@ -118,7 +143,7 @@ export const useOrderOperations = () => {
       
       toast({
         title: "Order Confirmed",
-        description: "Order has been confirmed and product stock has been updated.",
+        description: "Order has been confirmed and product stock has been updated successfully.",
       });
     },
     onError: (error) => {
@@ -126,7 +151,7 @@ export const useOrderOperations = () => {
       console.error('Order confirmation failed:', errorMessage);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: `Failed to confirm order: ${errorMessage}`,
         variant: "destructive",
       });
     }

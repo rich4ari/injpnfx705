@@ -13,9 +13,11 @@ import {
   AffiliateUser, 
   AffiliateSettings,
   AffiliateReferral,
-  AffiliatePayout,
+  onSnapshot,
   AffiliateCommission
-} from '@/types/affiliate';
+  getDocs,
+  orderBy,
+  limit
 import { collection, query, onSnapshot, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
@@ -88,7 +90,9 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
         
         // Get all referrals
         const referralsRef = collection(db, 'affiliate_referrals');
-        const referralsSnapshot = await getDocs(referralsRef);
+        // Use a simple query without complex conditions to avoid index requirements
+        const referralsQuery = query(referralsRef);
+        const referralsSnapshot = await getDocs(referralsQuery);
         const referralsData = referralsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -169,125 +173,143 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
 
     try {
       // Subscribe to affiliates
-      const affiliatesRef = collection(db, 'affiliates');
-      unsubscribeAffiliates = onSnapshot(
-        affiliatesRef,
-        (snapshot) => {
-          const affiliatesData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as AffiliateUser));
-          setAllAffiliates(affiliatesData);
-          
-          setAffiliates(affiliatesData);
-        },
-        (err) => {
-          console.error('Error subscribing to affiliates:', err);
-          setError('Failed to subscribe to affiliates');
-        }
-      );
+      try {
+        const affiliatesRef = collection(db, 'affiliates');
+        unsubscribeAffiliates = onSnapshot(
+          affiliatesRef,
+          (snapshot) => {
+            const affiliatesData = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            } as AffiliateUser));
+            setAllAffiliates(affiliatesData);
+            
+            setAffiliates(affiliatesData);
+          },
+          (err) => {
+            console.error('Error subscribing to affiliates:', err);
+            setError('Failed to subscribe to affiliates');
+          }
+        );
+      } catch (err) {
+        console.error('Error setting up affiliates subscription:', err);
+      }
 
       // Subscribe to commissions - simple query without ordering to avoid index requirement
-      const commissionsRef = collection(db, 'affiliate_commissions');
-      
-      unsubscribeCommissions = onSnapshot(
-        commissionsRef,
-        (snapshot) => {
-          const commissionsData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as AffiliateCommission));
-          setAllCommissions(commissionsData);
-          
-          // Sort in memory instead of using Firestore ordering
-          commissionsData.sort((a, b) => {
-            const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-            const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-            return bTime - aTime; // Descending order
-          });
-          
-          setCommissions(commissionsData);
-        },
-        (err) => {
-          console.error('Error subscribing to commissions:', err);
-          setError('Failed to subscribe to commissions');
-        }
-      );
+      try {
+        const commissionsRef = collection(db, 'affiliate_commissions');
+        
+        unsubscribeCommissions = onSnapshot(
+          commissionsRef,
+          (snapshot) => {
+            const commissionsData = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            } as AffiliateCommission));
+            setAllCommissions(commissionsData);
+            
+            // Sort in memory instead of using Firestore ordering
+            commissionsData.sort((a, b) => {
+              const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return bTime - aTime; // Descending order
+            });
+            
+            setCommissions(commissionsData);
+          },
+          (err) => {
+            console.error('Error subscribing to commissions:', err);
+            setError('Failed to subscribe to commissions');
+          }
+        );
+      } catch (err) {
+        console.error('Error setting up commissions subscription:', err);
+      }
 
       // Subscribe to payouts - simple query without ordering to avoid index requirement
-      const payoutsRef = collection(db, 'affiliate_payouts');
-      
-      unsubscribePayouts = onSnapshot(
-        payoutsRef,
-        (snapshot) => {
-          const payoutsData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as AffiliatePayout));
-          setAllPayouts(payoutsData);
-          
-          // Sort in memory instead of using Firestore ordering
-          payoutsData.sort((a, b) => {
-            const aTime = a.requestedAt ? new Date(a.requestedAt).getTime() : 0;
-            const bTime = b.requestedAt ? new Date(b.requestedAt).getTime() : 0;
-            return bTime - aTime; // Descending order
-          });
-          
-          setPayouts(payoutsData);
-        },
-        (err) => {
-          console.error('Error subscribing to payouts:', err);
-          setError('Failed to subscribe to payouts');
-        }
-      );
+      try {
+        const payoutsRef = collection(db, 'affiliate_payouts');
+        
+        unsubscribePayouts = onSnapshot(
+          payoutsRef,
+          (snapshot) => {
+            const payoutsData = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            } as AffiliatePayout));
+            setAllPayouts(payoutsData);
+            
+            // Sort in memory instead of using Firestore ordering
+            payoutsData.sort((a, b) => {
+              const aTime = a.requestedAt ? new Date(a.requestedAt).getTime() : 0;
+              const bTime = b.requestedAt ? new Date(b.requestedAt).getTime() : 0;
+              return bTime - aTime; // Descending order
+            });
+            
+            setPayouts(payoutsData);
+          },
+          (err) => {
+            console.error('Error subscribing to payouts:', err);
+            setError('Failed to subscribe to payouts');
+          }
+        );
+      } catch (err) {
+        console.error('Error setting up payouts subscription:', err);
+      }
       
       // Subscribe to referrals
-      const referralsRef = collection(db, 'affiliate_referrals');
-      
-      unsubscribeReferrals = onSnapshot(
-        referralsRef,
-        (snapshot) => {
-          const referralsData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as AffiliateReferral));
-          setAllReferrals(referralsData);
-          
-          // Filter by selected month
-          if (selectedMonth) {
-            const filtered = referralsData.filter(referral => {
-              if (!referral.createdAt) return false;
+      try {
+        const referralsRef = collection(db, 'affiliate_referrals');
+        
+        // Use a simple query without complex conditions to avoid index requirements
+        unsubscribeReferrals = onSnapshot(
+          referralsRef,
+          (snapshot) => {
+            const referralsData = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            } as AffiliateReferral));
+            setAllReferrals(referralsData);
+            
+            // Filter by selected month
+            if (selectedMonth) {
+              const filtered = referralsData.filter(referral => {
+                if (!referral.createdAt) return false;
+                const date = new Date(referral.createdAt);
+                const referralMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                return referralMonth === selectedMonth;
+              });
+              setReferrals(filtered);
+            } else {
+              setReferrals(referralsData);
+            }
+            
+            // Update available months
+            const months = referralsData.map(referral => {
+              if (!referral.createdAt) return '';
               const date = new Date(referral.createdAt);
-              const referralMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-              return referralMonth === selectedMonth;
-            });
-            setReferrals(filtered);
-          } else {
-            setReferrals(referralsData);
+              return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            }).filter(Boolean);
+            
+            const uniqueMonths = [...new Set([...months, ...availableMonths])];
+            uniqueMonths.sort((a, b) => b.localeCompare(a)); // Sort descending
+            
+            // Add current month if not already in the list
+            const currentMonth = getCurrentMonth();
+            if (!uniqueMonths.includes(currentMonth)) {
+              uniqueMonths.unshift(currentMonth);
+            }
+            
+            setAvailableMonths(uniqueMonths);
+          },
+          (err) => {
+            console.error('Error subscribing to referrals:', err);
+            setError('Failed to subscribe to referrals');
           }
-          
-          // Update available months
-          const months = referralsData.map(referral => {
-            const date = new Date(referral.createdAt);
-            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          });
-          
-          const uniqueMonths = [...new Set([...months, ...availableMonths])];
-          uniqueMonths.sort((a, b) => b.localeCompare(a)); // Sort descending
-          
-          // Add current month if not already in the list
-          const currentMonth = getCurrentMonth();
-          if (!uniqueMonths.includes(currentMonth)) {
-            uniqueMonths.unshift(currentMonth);
-          }
-          
-          setAvailableMonths(uniqueMonths);
-        },
-        (err) => {
-          console.error('Error subscribing to referrals:', err);
-          setError('Failed to subscribe to referrals');
-        }
-      );
+        );
+      } catch (err) {
+        console.error('Error setting up referrals subscription:', err);
+      }
     } catch (err) {
       console.error('Error setting up admin subscriptions:', err);
       setError('Failed to set up real-time updates');
@@ -296,8 +318,8 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
     return () => {
       if (unsubscribeAffiliates) unsubscribeAffiliates();
       if (unsubscribeCommissions) unsubscribeCommissions();
-      if (unsubscribePayouts) unsubscribePayouts();
-      if (unsubscribeReferrals) unsubscribeReferrals();
+      if (unsubscribePayouts) unsubscribePayouts(); 
+      if (unsubscribeReferrals) unsubscribeReferrals(); 
     };
   }, [user]);
 

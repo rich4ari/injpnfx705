@@ -1,19 +1,17 @@
 import { 
   collection, 
   doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  updateDoc, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  increment, 
-  Timestamp,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  increment,
   addDoc,
-  onSnapshot,
-  serverTimestamp
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { 
@@ -793,85 +791,141 @@ export const getAllPayouts = async (): Promise<AffiliatePayout[]> => {
 // Subscribe to affiliate stats (real-time)
 export const subscribeToAffiliateStats = (
   affiliateId: string,
-  callback: (affiliate: AffiliateUser) => void
+  callback: (affiliate: AffiliateUser) => void 
 ) => {
-  const affiliateRef = doc(db, AFFILIATES_COLLECTION, affiliateId);
-  
-  return onSnapshot(affiliateRef, (doc) => {
-    if (doc.exists()) {
-      callback({
-        id: doc.id,
-        ...doc.data()
-      } as AffiliateUser);
-    }
-  });
+  try {
+    const affiliateRef = doc(db, AFFILIATES_COLLECTION, affiliateId);
+    
+    return onSnapshot(affiliateRef, (doc) => {
+      if (doc.exists()) {
+        callback({
+          id: doc.id,
+          ...doc.data()
+        } as AffiliateUser);
+      }
+    }, (error) => {
+      console.error('Error in affiliate stats snapshot:', error);
+    });
+  } catch (error) {
+    console.error('Error setting up affiliate stats subscription:', error);
+    // Return a no-op function to avoid errors when unsubscribing
+    return () => {};
+  }
 };
 
 // Subscribe to affiliate referrals (real-time)
 export const subscribeToAffiliateReferrals = (
   affiliateId: string,
-  callback: (referrals: AffiliateReferral[]) => void
+  callback: (referrals: AffiliateReferral[]) => void 
 ) => {
-  const referralsRef = collection(db, REFERRALS_COLLECTION);
-  const q = query(
-    referralsRef,
-    where('referrerId', '==', affiliateId),
-    orderBy('createdAt', 'desc')
-  );
-  
-  return onSnapshot(q, (querySnapshot) => {
-    const referrals = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as AffiliateReferral));
+  try {
+    const referralsRef = collection(db, REFERRALS_COLLECTION);
     
-    console.log(`Received ${referrals.length} referrals for affiliate ${affiliateId}`);
-    callback(referrals);
-  });
+    // Use a simpler query to avoid index requirements
+    const q = query(
+      referralsRef,
+      where('referrerId', '==', affiliateId)
+    );
+    
+    return onSnapshot(q, (querySnapshot) => {
+      const referrals = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as AffiliateReferral));
+      
+      // Sort manually in memory
+      referrals.sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bTime - aTime; // Descending order
+      });
+      
+      console.log(`Received ${referrals.length} referrals for affiliate ${affiliateId}`);
+      callback(referrals);
+    }, (error) => {
+      console.error('Error in referrals snapshot:', error);
+    });
+  } catch (error) {
+    console.error('Error setting up referrals subscription:', error);
+    // Return a no-op function to avoid errors when unsubscribing
+    return () => {};
+  }
 };
 
 // Subscribe to affiliate commissions (real-time)
 export const subscribeToAffiliateCommissions = (
   affiliateId: string,
-  callback: (commissions: AffiliateCommission[]) => void
+  callback: (commissions: AffiliateCommission[]) => void 
 ) => {
-  const commissionsRef = collection(db, COMMISSIONS_COLLECTION);
-  const q = query(
-    commissionsRef,
-    where('affiliateId', '==', affiliateId),
-    orderBy('createdAt', 'desc')
-  );
-  
-  return onSnapshot(q, (querySnapshot) => {
-    const commissions = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as AffiliateCommission));
+  try {
+    const commissionsRef = collection(db, COMMISSIONS_COLLECTION);
     
-    callback(commissions);
-  });
+    // Use a simpler query to avoid index requirements
+    const q = query(
+      commissionsRef,
+      where('affiliateId', '==', affiliateId)
+    );
+    
+    return onSnapshot(q, (querySnapshot) => {
+      const commissions = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as AffiliateCommission));
+      
+      // Sort manually in memory
+      commissions.sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bTime - aTime; // Descending order
+      });
+      
+      callback(commissions);
+    }, (error) => {
+      console.error('Error in commissions snapshot:', error);
+    });
+  } catch (error) {
+    console.error('Error setting up commissions subscription:', error);
+    // Return a no-op function to avoid errors when unsubscribing
+    return () => {};
+  }
 };
 
 // Subscribe to affiliate payouts (real-time)
 export const subscribeToAffiliatePayouts = (
   affiliateId: string,
-  callback: (payouts: AffiliatePayout[]) => void
+  callback: (payouts: AffiliatePayout[]) => void 
 ) => {
-  const payoutsRef = collection(db, PAYOUTS_COLLECTION);
-  const q = query(
-    payoutsRef,
-    where('affiliateId', '==', affiliateId),
-    orderBy('requestedAt', 'desc')
-  );
-  
-  return onSnapshot(q, (querySnapshot) => {
-    const payouts = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as AffiliatePayout));
+  try {
+    const payoutsRef = collection(db, PAYOUTS_COLLECTION);
     
-    callback(payouts);
-  });
+    // Use a simpler query to avoid index requirements
+    const q = query(
+      payoutsRef,
+      where('affiliateId', '==', affiliateId)
+    );
+    
+    return onSnapshot(q, (querySnapshot) => {
+      const payouts = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as AffiliatePayout));
+      
+      // Sort manually in memory
+      payouts.sort((a, b) => {
+        const aTime = a.requestedAt ? new Date(a.requestedAt).getTime() : 0;
+        const bTime = b.requestedAt ? new Date(b.requestedAt).getTime() : 0;
+        return bTime - aTime; // Descending order
+      });
+      
+      callback(payouts);
+    }, (error) => {
+      console.error('Error in payouts snapshot:', error);
+    });
+  } catch (error) {
+    console.error('Error setting up payouts subscription:', error);
+    // Return a no-op function to avoid errors when unsubscribing
+    return () => {};
+  }
 };
 
 // Update affiliate bank info

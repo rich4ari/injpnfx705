@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/useFirebaseAuth';
+import { toast } from '@/hooks/use-toast';
 import { 
   createOrUpdateAffiliateUser,
   getAffiliateUser,
@@ -101,68 +102,89 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
     let unsubscribeStats: (() => void) | undefined;
     let unsubscribeReferrals: (() => void) | undefined;
     let unsubscribeCommissions: (() => void) | undefined;
-    let unsubscribePayouts: (() => void) | undefined;
+    let unsubscribePayouts: (() => void) | undefined; 
 
     try {
       // Subscribe to affiliate stats
-      unsubscribeStats = subscribeToAffiliateStats(
-        affiliate.id,
-        (updatedAffiliate) => {
-          setAffiliate(updatedAffiliate);
-        }
-      );
+      try {
+        unsubscribeStats = subscribeToAffiliateStats(
+          affiliate.id,
+          (updatedAffiliate) => {
+            setAffiliate(updatedAffiliate);
+          }
+        );
+      } catch (statsError) {
+        console.error('Error subscribing to affiliate stats:', statsError);
+        toast({
+          title: "Connection Error",
+          description: "Failed to connect to real-time updates for affiliate stats",
+          variant: "destructive"
+        });
+      }
 
       // Subscribe to referrals
-      unsubscribeReferrals = subscribeToAffiliateReferrals(
-        affiliate.id,
-        (updatedReferrals) => {
-          console.log('Received updated referrals:', updatedReferrals);
-          setReferrals(updatedReferrals);
-          
-          // Update followers based on referrals with registered or purchased status
-          const newFollowers = updatedReferrals
-            .filter(ref => 
-              (ref.status === 'registered' || ref.status === 'ordered' || 
-               ref.status === 'approved' || ref.status === 'purchased') && 
-              ref.referredUserId && 
-              ref.referredUserEmail
-            )
-            .map(ref => ({
-              id: ref.id,
-              affiliateId: affiliate.id,
-              userId: ref.referredUserId || '',
-              email: ref.referredUserEmail || '',
-              displayName: ref.referredUserName || ref.referredUserEmail?.split('@')[0] || '',
-              totalOrders: ref.status === 'ordered' || ref.status === 'approved' ? 1 : 0,
-              totalSpent: ref.orderTotal || 0,
-              firstOrderDate: ref.orderedAt || '',
-              lastOrderDate: ref.orderedAt || '',
-              createdAt: ref.createdAt
-            } as AffiliateFollower));
-          
-          console.log('Calculated followers from referrals:', newFollowers);
-          
-          if (newFollowers.length > 0) {
-            setFollowers(newFollowers);
+      try {
+        unsubscribeReferrals = subscribeToAffiliateReferrals(
+          affiliate.id,
+          (updatedReferrals) => {
+            console.log('Received updated referrals:', updatedReferrals);
+            setReferrals(updatedReferrals);
+            
+            // Update followers based on referrals with registered or purchased status
+            const newFollowers = updatedReferrals
+              .filter(ref => 
+                (ref.status === 'registered' || ref.status === 'ordered' || 
+                 ref.status === 'approved' || ref.status === 'purchased') && 
+                ref.referredUserId && 
+                ref.referredUserEmail
+              )
+              .map(ref => ({
+                id: ref.id,
+                affiliateId: affiliate.id,
+                userId: ref.referredUserId || '',
+                email: ref.referredUserEmail || '',
+                displayName: ref.referredUserName || ref.referredUserEmail?.split('@')[0] || '',
+                totalOrders: ref.status === 'ordered' || ref.status === 'approved' ? 1 : 0,
+                totalSpent: ref.orderTotal || 0,
+                firstOrderDate: ref.orderedAt || '',
+                lastOrderDate: ref.orderedAt || '',
+                createdAt: ref.createdAt
+              } as AffiliateFollower));
+            
+            console.log('Calculated followers from referrals:', newFollowers);
+            
+            if (newFollowers.length > 0) {
+              setFollowers(newFollowers);
+            }
           }
-        }
-      );
+        );
+      } catch (referralsError) {
+        console.error('Error subscribing to referrals:', referralsError);
+      }
 
       // Subscribe to commissions
-      unsubscribeCommissions = subscribeToAffiliateCommissions(
-        affiliate.id,
-        (updatedCommissions) => {
-          setCommissions(updatedCommissions);
-        }
-      );
+      try {
+        unsubscribeCommissions = subscribeToAffiliateCommissions(
+          affiliate.id,
+          (updatedCommissions) => {
+            setCommissions(updatedCommissions);
+          }
+        );
+      } catch (commissionsError) {
+        console.error('Error subscribing to commissions:', commissionsError);
+      }
 
       // Subscribe to payouts
-      unsubscribePayouts = subscribeToAffiliatePayouts(
-        affiliate.id,
-        (updatedPayouts) => {
-          setPayouts(updatedPayouts);
-        }
-      );
+      try {
+        unsubscribePayouts = subscribeToAffiliatePayouts(
+          affiliate.id,
+          (updatedPayouts) => {
+            setPayouts(updatedPayouts);
+          }
+        );
+      } catch (payoutsError) {
+        console.error('Error subscribing to payouts:', payoutsError);
+      }
     } catch (err) {
       console.error('Error setting up subscriptions:', err);
       setError('Failed to set up real-time updates');
@@ -171,8 +193,8 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
     return () => {
       if (unsubscribeStats) unsubscribeStats();
       if (unsubscribeReferrals) unsubscribeReferrals();
-      if (unsubscribeCommissions) unsubscribeCommissions();
-      if (unsubscribePayouts) unsubscribePayouts();
+      if (unsubscribeCommissions) unsubscribeCommissions(); 
+      if (unsubscribePayouts) unsubscribePayouts(); 
     };
   }, [user, affiliate]);
 

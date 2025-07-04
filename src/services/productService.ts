@@ -1,8 +1,8 @@
 import { 
   collection, 
   getDocs, 
-  query, 
-  where, 
+  query,
+  where,
   orderBy,
   addDoc,
   updateDoc,
@@ -277,22 +277,27 @@ export const deleteProduct = async (id: string) => {
 export const getProduct = async (id: string): Promise<Product | null> => {
   try {
     const productRef = doc(db, PRODUCTS_COLLECTION, id);
-    const snapshot = await getDoc(productRef);
-    
-    if (snapshot.exists()) {
-      const data = snapshot.data();
-      return { 
-        id: snapshot.id, 
-        ...data,
-        // Ensure backwards compatibility with image_url field
-        image_url: Array.isArray(data.images) && data.images.length > 0 
-          ? data.images[0] 
-          : data.image_url || '/placeholder.svg'
-      } as Product;
+    try {
+      const snapshot = await getDoc(productRef);
+      
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        return { 
+          id: snapshot.id, 
+          ...data,
+          // Ensure backwards compatibility with image_url field
+          image_url: Array.isArray(data.images) && data.images.length > 0 
+            ? data.images[0] 
+            : data.image_url || '/placeholder.svg'
+        } as Product;
+      }
+      return null;
+    } catch (innerError) {
+      console.error(`Error fetching product ${id}:`, innerError);
+      return null;
     }
-    return null;
   } catch (error) {
     console.error('Error fetching product:', error);
-    throw error;
+    return null;
   }
 };

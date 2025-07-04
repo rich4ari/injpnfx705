@@ -1,14 +1,15 @@
 import { 
   collection, 
   getDocs, 
-  query,
-  where, 
+  query, 
   orderBy,
+  where,
   addDoc,
   updateDoc,
   doc,
   getDoc,
-  serverTimestamp
+  serverTimestamp,
+  runTransaction
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Order } from '@/types';
@@ -34,34 +35,39 @@ export const getAllOrders = async (): Promise<Order[]> => {
 
 export const getOrdersByUser = async (userId: string): Promise<Order[]> => {
   try {
-    if (!userId) {
-      console.log('No userId provided, returning empty array');
+    try {
+      if (!userId) {
+        console.log('No userId provided, returning empty array');
+        return [];
+      }
+  
+      console.log('Fetching orders for user:', userId);
+      
+      const ordersRef = collection(db, ORDERS_COLLECTION);
+      
+      // Simplified query without orderBy to avoid index issues
+      const q = query(
+        ordersRef, 
+        where('user_id', '==', userId)
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      // Sort manually on client side to avoid Firebase index requirements
+      const orders = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Order)).sort((a, b) => {
+        // Sort by created_at descending (newest first)
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+  
+      console.log(`Found ${orders.length} orders for user ${userId}`);
+      return orders;
+    } catch (innerError) {
+      console.error('Inner error fetching user orders:', innerError);
       return [];
     }
-
-    console.log('Fetching orders for user:', userId);
-    
-    const ordersRef = collection(db, ORDERS_COLLECTION);
-    
-    // Simplified query without orderBy to avoid index issues
-    const q = query(
-      ordersRef, 
-      where('user_id', '==', userId)
-    );
-    
-    const snapshot = await getDocs(q);
-    
-    // Sort manually on client side to avoid Firebase index requirements
-    const orders = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Order)).sort((a, b) => {
-      // Sort by created_at descending (newest first)
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-
-    console.log(`Found ${orders.length} orders for user ${userId}`);
-    return orders;
   } catch (error) {
     console.error('Error fetching user orders:', error);
     // Return empty array instead of throwing to prevent app crash
@@ -71,28 +77,33 @@ export const getOrdersByUser = async (userId: string): Promise<Order[]> => {
 
 export const getPendingOrders = async (): Promise<Order[]> => {
   try {
-    const ordersRef = collection(db, ORDERS_COLLECTION);
-    
-    // Simplified query without orderBy to avoid index issues
-    const q = query(
-      ordersRef,
-      where('status', '==', 'pending')
-    );
-    
-    const snapshot = await getDocs(q);
-    
-    // Sort manually on client side
-    const orders = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Order)).sort((a, b) => {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-    
-    return orders;
+    try {
+      const ordersRef = collection(db, ORDERS_COLLECTION);
+      
+      // Simplified query without orderBy to avoid index issues
+      const q = query(
+        ordersRef,
+        where('status', '==', 'pending')
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      // Sort manually on client side
+      const orders = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Order)).sort((a, b) => {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      
+      return orders;
+    } catch (innerError) {
+      console.error('Inner error fetching pending orders:', innerError);
+      return [];
+    }
   } catch (error) {
     console.error('Error fetching pending orders:', error);
-    throw error;
+    return [];
   }
 };
 
