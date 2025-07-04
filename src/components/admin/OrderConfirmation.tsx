@@ -7,7 +7,6 @@ import { Order } from '@/types';
 import { useOrderOperations } from '@/hooks/useOrderOperations';
 import { CheckCircle, XCircle, Clock, User, Mail, Phone, MapPin, Package, FileText } from 'lucide-react';
 import InvoiceModal from '@/components/InvoiceModal';
-import { useState } from 'react';
 
 interface OrderConfirmationProps {
   order: Order;
