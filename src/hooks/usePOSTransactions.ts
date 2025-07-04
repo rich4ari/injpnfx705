@@ -28,6 +28,8 @@ export const usePOSTransactions = (date?: string) => {
       // Create query - using simple query to avoid index requirements
       const transactionsRef = collection(db, 'pos_transactions');
       const q = query(transactionsRef);
+      
+      console.log('Setting up POS transactions listener');
 
       // First check if collection exists and has documents
       getDocs(q).then(initialSnapshot => {
@@ -44,6 +46,7 @@ export const usePOSTransactions = (date?: string) => {
       // Set up real-time listener
       const unsubscribe = onSnapshot(q, (snapshot) => {
         try {
+          console.log(`Snapshot received with ${snapshot.size} documents`);
           if (snapshot.empty) {
             console.log('No POS transactions found');
             setTransactions([]);
@@ -53,6 +56,7 @@ export const usePOSTransactions = (date?: string) => {
           
           let transactionData: POSTransaction[] = [];
           snapshot.forEach((doc) => {
+            console.log(`Processing transaction document: ${doc.id}`);
             try {
               const data = doc.data();
               // Ensure all required fields exist
@@ -71,10 +75,13 @@ export const usePOSTransactions = (date?: string) => {
           
           // Filter by date client-side instead of in the query
           if (date) {
+            console.log(`Filtering transactions by date: ${date}`);
             transactionData = transactionData.filter(t => {
               if (!t.createdAt) return false;
               const txDate = new Date(t.createdAt);
-              return txDate >= new Date(startDateStr) && txDate < new Date(endDateStr);
+              const isInRange = txDate >= new Date(startDateStr) && txDate < new Date(endDateStr);
+              console.log(`Transaction ${t.id} date: ${txDate}, in range: ${isInRange}`);
+              return isInRange;
             });
           }
 
@@ -85,6 +92,12 @@ export const usePOSTransactions = (date?: string) => {
           
           console.log(`Loaded ${transactionData.length} POS transactions`);
           setTransactions(transactionData);
+          
+          // Log the first transaction for debugging
+          if (transactionData.length > 0) {
+            console.log('Sample transaction:', JSON.stringify(transactionData[0]).substring(0, 200) + '...');
+          }
+          
           setLoading(false);
         } catch (err) {
           console.error('Error processing transaction data:', err);

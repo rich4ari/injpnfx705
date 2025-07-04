@@ -45,7 +45,7 @@ const RealtimeClock = ({
   const timezone = 'JST';
 
   return (
-    <div className={`flex items-center text-gray-700 ${className}`}>
+    <div className={`flex items-center text-gray-700 print:hidden ${className}`}>
       {showIcon && <Clock className="w-4 h-4 mr-2" />}
       <div className="flex flex-col sm:flex-row sm:items-center text-right">
         {showDate && (

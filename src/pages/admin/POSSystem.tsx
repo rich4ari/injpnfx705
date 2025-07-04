@@ -57,9 +57,9 @@ import {
   Receipt,
   Printer,
   AlertOctagon,
-  Download,
-  XCircle
+  Download
 } from 'lucide-react';
+import { XCircle } from 'lucide-react';
 
 // Cart item interface
 interface CartItem {
@@ -293,8 +293,9 @@ const POSSystem = () => {
   const printReceipt = async () => {
     if (!receiptRef.current) return;
     
+    console.log('Printing receipt...');
+    
     try {
-      const originalContents = document.body.innerHTML;
       const printContents = receiptRef.current.innerHTML;
       
       // Create a new window for printing
@@ -377,9 +378,18 @@ const POSSystem = () => {
       
       // Print after a short delay to ensure content is loaded
       setTimeout(() => {
+        console.log('Executing print command...');
         printWindow.print();
-        printWindow.close();
+        // Don't close the window immediately to allow printing to complete
+        setTimeout(() => {
+          printWindow.close();
+        }, 1000);
       }, 250);
+      
+      toast({
+        title: "Print Berhasil",
+        description: "Struk berhasil dicetak",
+      });
       
     } catch (error) {
       console.error('Error printing receipt:', error);
@@ -394,6 +404,7 @@ const POSSystem = () => {
   // Download receipt as PDF
   const downloadReceiptPDF = async () => {
     if (!receiptRef.current) return;
+    console.log('Generating PDF...');
     
     try {
       // Dynamically import html2canvas and jsPDF
@@ -403,6 +414,7 @@ const POSSystem = () => {
       // Create canvas from receipt element
       const canvas = await html2canvas(receiptRef.current, {
         scale: 2, // Higher resolution
+        allowTaint: true,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff'
@@ -934,6 +946,7 @@ const POSSystem = () => {
       <Dialog 
         open={isReceiptDialogOpen} 
         onOpenChange={(open) => {
+          console.log('Receipt dialog state changing to:', open);
           setIsReceiptDialogOpen(open);
           if (!open && isTransactionComplete) {
             completeTransaction();
@@ -944,9 +957,9 @@ const POSSystem = () => {
           <DialogHeader>
             <DialogTitle>Struk Pembayaran</DialogTitle>
           </DialogHeader>
-          
+
           {currentTransaction && (
-            <div className="py-4" ref={receiptRef}>
+            <div className="py-4" id="receipt-content" ref={receiptRef}>
               <div className="font-mono" style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
                 <div className="text-center mb-4">
                   <h3 className="font-bold text-lg">INJAPAN FOOD</h3>
@@ -1023,6 +1036,18 @@ const POSSystem = () => {
             </div>
           )}
           
+          {!currentTransaction && (
+            <div className="py-8 text-center">
+              <AlertOctagon className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Data Transaksi Tidak Tersedia
+              </h3>
+              <p className="text-gray-500">
+                Tidak dapat menampilkan struk karena data transaksi tidak lengkap
+              </p>
+            </div>
+          )}
+          
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
@@ -1037,7 +1062,8 @@ const POSSystem = () => {
               Tutup
             </Button>
             <Button 
-              onClick={downloadReceiptPDF} 
+              onClick={downloadReceiptPDF}
+              disabled={!currentTransaction}
               variant="outline"
               className="sm:flex-1"
             >
@@ -1046,6 +1072,7 @@ const POSSystem = () => {
             </Button>
             <Button 
               onClick={printReceipt}
+              disabled={!currentTransaction}
               className="sm:flex-1 bg-green-600 hover:bg-green-700"
             >
               <Printer className="w-4 h-4 mr-2" />
