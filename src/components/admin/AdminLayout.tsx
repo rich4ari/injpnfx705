@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useFirebaseAuth';
 import { useEffect, useState } from 'react';
+import RealtimeClock from './RealtimeClock';
 import AdminSidebar from './AdminSidebar';
 
 interface AdminLayoutProps {
@@ -100,6 +101,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
       <div className="flex-1 overflow-auto">
+        <div className="flex justify-end p-4">
+          <RealtimeClock showIcon={true} showDate={true} showSeconds={true} />
+        </div>
         {children}
       </div>
     </div>

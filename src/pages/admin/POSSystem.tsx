@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useFirebaseAuth';
 import { useProducts } from '@/hooks/useProducts';
 import { collection, addDoc, runTransaction, doc, Timestamp, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import RealtimeClock from '@/components/admin/RealtimeClock';
 import { db } from '@/config/firebase';
 import { toast } from '@/hooks/use-toast';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -510,13 +511,16 @@ const POSSystem = () => {
       <div className="p-4 md:p-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">POS Kasir</h1>
-            <p className="text-gray-600">
-              Kasir: {user.displayName || user.email} | {new Date().toLocaleString('id-ID')}
-            </p>
+            <div className="flex items-center space-x-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">POS Kasir</h1>
+            </div>
+            <div className="flex items-center mt-1">
+              <span className="text-gray-600 mr-2">Kasir: {user.displayName || user.email}</span>
+            </div>
           </div>
           
-          <div className="mt-4 md:mt-0 flex space-x-2">
+          <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-end md:items-center space-y-2 md:space-y-0 md:space-x-4">
+            <RealtimeClock showIcon={true} showDate={true} showSeconds={true} className="text-right" />
             <Tabs defaultValue="pos" className="w-full md:w-auto">
               <TabsList>
                 <TabsTrigger value="pos">POS</TabsTrigger>
