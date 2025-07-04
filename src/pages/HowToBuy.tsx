@@ -54,10 +54,8 @@ const HowToBuy = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-primary mb-4">Cara Membeli</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Mudah dan praktis! Ikuti langkah-langkah sederhana berikut untuk berbelanja makanan Indonesia favoritmu
-          </p>
+          <h1 className="text-4xl font-bold text-primary mb-4">{t('howToBuy.title')}</h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">{t('howToBuy.subtitle')}</p>
         </div>
 
         {/* Steps */}
@@ -80,9 +78,9 @@ const HowToBuy = () => {
                 
                 {/* Step Content */}
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
-                  <p className="text-gray-700 mb-3">{step.description}</p>
-                  <p className="text-sm text-gray-600">{step.details}</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{t(`howToBuy.steps.step${step.number}.title`)}</h3>
+                  <p className="text-gray-700 mb-3">{t(`howToBuy.steps.step${step.number}.description`)}</p>
+                  <p className="text-sm text-gray-600">{t(`howToBuy.steps.step${step.number}.details`)}</p>
                 </div>
               </div>
             </div>
@@ -91,41 +89,41 @@ const HowToBuy = () => {
 
         {/* FAQ Section */}
         <div className="max-w-4xl mx-auto mb-16">
-          <h2 className="text-3xl font-bold text-center mb-8">Pertanyaan Sering Ditanyakan</h2>
+          <h2 className="text-3xl font-bold text-center mb-8">{t('howToBuy.faq.title')}</h2>
           
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="font-semibold text-lg mb-2">❓ Apakah produk dijamin halal?</h3>
-              <p className="text-gray-600">Ya, semua produk yang kami jual adalah produk halal dan telah melewati seleksi ketat untuk kualitas dan kehalalannya.</p>
+              <h3 className="font-semibold text-lg mb-2">❓ {t('howToBuy.faq.q1')}</h3>
+              <p className="text-gray-600">{t('howToBuy.faq.a1')}</p>
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="font-semibold text-lg mb-2">🚚 Berapa lama pengiriman?</h3>
-              <p className="text-gray-600">Pengiriman biasanya memakan waktu 2-5 hari kerja tergantung lokasi. Kami akan memberikan informasi tracking setelah produk dikirim.</p>
+              <h3 className="font-semibold text-lg mb-2">🚚 {t('howToBuy.faq.q2')}</h3>
+              <p className="text-gray-600">{t('howToBuy.faq.a2')}</p>
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="font-semibold text-lg mb-2">💳 Metode pembayaran apa saja yang tersedia?</h3>
-              <p className="text-gray-600">Saat ini kami menerima pembayaran melalui transfer bank, e-wallet, atau COD (Cash on Delivery) untuk area tertentu.</p>
+              <h3 className="font-semibold text-lg mb-2">💳 {t('howToBuy.faq.q3')}</h3>
+              <p className="text-gray-600">{t('howToBuy.faq.a3')}</p>
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="font-semibold text-lg mb-2">📞 Bagaimana cara menghubungi customer service?</h3>
-              <p className="text-gray-600">Kamu bisa menghubungi kami melalui WhatsApp di +817084894699. Tim kami siap membantu 24/7!</p>
+              <h3 className="font-semibold text-lg mb-2">📞 {t('howToBuy.faq.q4')}</h3>
+              <p className="text-gray-600">{t('howToBuy.faq.a4')}</p>
             </div>
           </div>
         </div>
 
         {/* CTA Section */}
         <div className="text-center bg-accent text-white p-12 rounded-lg">
-          <h2 className="text-3xl font-bold mb-4">Siap Mulai Berbelanja? 🛍️</h2>
-          <p className="text-xl mb-8">Jangan biarkan rindu kampung halaman mengganggu. Pesan makanan Indonesia favoritmu sekarang!</p>
+          <h2 className="text-3xl font-bold mb-4">{t('howToBuy.cta.title')}</h2>
+          <p className="text-xl mb-8">{t('howToBuy.cta.description')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/products"
               className="bg-white text-accent hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105"
             >
-              🛒 Belanja Sekarang
+              {t('howToBuy.cta.shopNow')}
             </Link>
             <a
               href="https://wa.me/817084894699"
@@ -133,7 +131,7 @@ const HowToBuy = () => {
               rel="noopener noreferrer"
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105"
             >
-              💬 Chat WhatsApp
+              {t('howToBuy.cta.contactUs')}
             </a>
           </div>
         </div>

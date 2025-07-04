@@ -51,9 +51,10 @@ const Header = ({ shouldAnimateCart = false }: HeaderProps) => {
   };
 
   const navItems = [
-    { path: '/', label: t('nav.home') },
-    { path: '/products', label: t('nav.products') },
-    { path: '/how-to-buy', label: t('nav.howToBuy') },
+    { path: '/', label: 'nav.home' },
+    { path: '/products', label: 'nav.products' },
+    { path: '/how-to-buy', label: 'nav.howToBuy' },
+    { path: '/referral', label: 'nav.affiliate' }
   ];
 
   // Only show install button if app is installable and not already installed
@@ -89,7 +90,7 @@ const Header = ({ shouldAnimateCart = false }: HeaderProps) => {
                     : 'text-gray-700 hover:text-primary'
                 }`}
               >
-                {item.label}
+                {t(item.label)}
               </div>
             ))}
             
@@ -117,7 +118,7 @@ const Header = ({ shouldAnimateCart = false }: HeaderProps) => {
               aria-label="Keranjang Saya"
             >
               <CartIcon onAnimationTrigger={shouldAnimateCart} />
-              <span className="hidden sm:inline text-sm font-medium">Keranjang Saya</span>
+              <span className="hidden sm:inline text-sm font-medium">{t('nav.cart')}</span>
             </div>
 
             {/* Auth */}
@@ -166,14 +167,14 @@ const Header = ({ shouldAnimateCart = false }: HeaderProps) => {
                       : 'text-gray-700 hover:text-primary'
                   }`}
                 >
-                  {item.label}
+                  {t(item.label)}
                 </div>
               ))}
               <div
                 onClick={() => handleNavClick('/cart')}
                 className="text-gray-700 hover:text-primary font-medium text-left cursor-pointer"
               >
-                Keranjang Saya
+                {t('nav.cart')}
               </div>
               {!user && (
                 <div

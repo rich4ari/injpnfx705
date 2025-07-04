@@ -44,19 +44,19 @@ const ReferralLinkCard = () => {
       <CardHeader>
         <CardTitle className="text-lg flex items-center">
           <Share2 className="w-5 h-5 mr-2 text-primary" />
-          Link Affiliate Anda
+          {t('affiliate.yourAffiliateLink')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col space-y-2">
-          <div className="text-sm font-medium text-gray-700">Kode Referral:</div>
+          <div className="text-sm font-medium text-gray-700">{t('affiliate.referralCode')}</div>
           <div className="bg-gray-100 p-2 rounded-md font-mono text-center font-bold text-primary">
             {affiliate.referralCode}
           </div>
         </div>
 
         <div className="flex flex-col space-y-2">
-          <div className="text-sm font-medium text-gray-700">Link Affiliate:</div>
+          <div className="text-sm font-medium text-gray-700">{t('affiliate.yourAffiliateLink')}:</div>
           <div className="flex space-x-2">
             <Input
               value={referralLink}
@@ -65,7 +65,7 @@ const ReferralLinkCard = () => {
             />
             <Button onClick={handleCopyLink} size="sm" className="shrink-0">
               <Copy className="w-4 h-4 mr-2" />
-              Salin
+              {t('affiliate.copyLink')}
             </Button>
           </div>
         </div>
@@ -73,7 +73,7 @@ const ReferralLinkCard = () => {
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 pt-2">
           <Button onClick={handleShare} variant="outline" className="w-full">
             <Share2 className="w-4 h-4 mr-2" />
-            Bagikan Link
+            {t('affiliate.shareLink')}
           </Button>
           <Button 
             onClick={() => setShowQR(!showQR)} 
@@ -81,7 +81,7 @@ const ReferralLinkCard = () => {
             className="w-full"
           >
             <QrCode className="w-4 h-4 mr-2" />
-            {showQR ? 'Sembunyikan QR' : 'Tampilkan QR'}
+            {showQR ? t('affiliate.hideQR') : t('affiliate.showQR')}
           </Button>
         </div>
 
@@ -97,15 +97,14 @@ const ReferralLinkCard = () => {
               />
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              Scan QR code untuk menggunakan link affiliate Anda
+              {t('affiliate.scanQrToUse')}
             </p>
           </div>
         )}
 
         <div className="bg-blue-50 p-3 rounded-md text-sm text-blue-700 mt-4">
           <p>
-            <span className="font-medium">Tip:</span> Bagikan link ini ke teman-teman Anda. 
-            Setiap pembelian melalui link ini akan memberikan Anda komisi!
+            <span className="font-medium">{t('affiliate.tipTitle')}</span> {t('affiliate.tipMessage')}
           </p>
         </div>
       </CardContent>

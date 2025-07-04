@@ -21,7 +21,7 @@ const ProductVariantDisplay = ({
 
   return (
     <div className="space-y-4">
-      <h4 className="font-medium text-gray-900">Pilih Varian:</h4>
+      <h4 className="font-medium text-gray-900">{t('productDetail.selectVariant')}:</h4>
       <div className="space-y-3">
         {variants.map((variant) => {
           const isSelected = selectedVariant?.id === variant.id;
@@ -79,7 +79,7 @@ const ProductVariantDisplay = ({
         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
           <div className="flex justify-between items-center">
             <div>
-              <span className="font-medium text-gray-900">Varian Dipilih: </span>
+              <span className="font-medium text-gray-900">{t('productDetail.variantSelected')}: </span>
               <span className="text-gray-700">{selectedVariant.name}</span>
             </div>
             <div className="text-right">
@@ -87,7 +87,7 @@ const ProductVariantDisplay = ({
                 ¥{selectedVariant.price.toLocaleString()}
               </div>
               <div className="text-sm text-gray-600">
-                Stok: {selectedVariant.stock} tersedia
+                {t('products.stock')}: {selectedVariant.stock} {t('productDetail.available')}
               </div>
             </div>
           </div>

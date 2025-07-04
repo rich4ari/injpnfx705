@@ -67,7 +67,7 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
                     ? 'bg-yellow-100 text-yellow-700'
                     : 'bg-red-100 text-red-700'
               }`}>
-                {product.stock > 0 ? `Stok: ${product.stock}` : 'Habis'}
+                {product.stock > 0 ? `${t('products.stock')}: ${product.stock}` : t('products.outOfStock')}
               </span>
               
               {product.variants && product.variants.length > 0 && (

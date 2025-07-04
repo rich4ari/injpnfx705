@@ -310,7 +310,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold mb-6 text-gray-800">Informasi Pengiriman</h2>
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">{t('checkout.shippingInfo')}</h2>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -320,7 +320,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
               name="fullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nama Lengkap Penerima *</FormLabel>
+                  <FormLabel>{t('checkout.fullName')} *</FormLabel>
                   <FormControl>
                     <Input placeholder="Masukkan nama lengkap" {...field} />
                   </FormControl>
@@ -334,7 +334,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
               name="whatsapp"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nomor WhatsApp/Telepon *</FormLabel>
+                  <FormLabel>{t('checkout.whatsapp')} *</FormLabel>
                   <FormControl>
                     <Input placeholder="081234567890" {...field} />
                   </FormControl>
@@ -349,7 +349,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email *</FormLabel>
+                <FormLabel>{t('checkout.email')} *</FormLabel>
                 <FormControl>
                   <Input type="email" placeholder="contoh@email.com" {...field} />
                 </FormControl>
@@ -364,7 +364,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
               name="prefecture"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Prefektur *</FormLabel>
+                  <FormLabel>{t('checkout.prefecture')} *</FormLabel>
                   <Select 
                     onValueChange={(value) => {
                       field.onChange(value);
@@ -375,7 +375,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
                   >
                     <FormControl>
                       <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Pilih prefektur" />
+                        <SelectValue placeholder={t('checkout.selectPrefecture')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-white border shadow-lg max-h-60 z-50">
@@ -396,7 +396,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
               name="city"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Area/Kota/Cho/Machi *</FormLabel>
+                  <FormLabel>{t('checkout.city')} *</FormLabel>
                   <FormControl>
                     <Input placeholder="Contoh: Shibuya-ku, Harajuku" {...field} />
                   </FormControl>
@@ -411,7 +411,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
             name="postalCode"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Kode Pos *</FormLabel>
+                <FormLabel>{t('checkout.postalCode')} *</FormLabel>
                 <FormControl>
                   <Input placeholder="1234567" maxLength={7} {...field} />
                 </FormControl>
@@ -425,7 +425,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
             name="address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Alamat Lengkap *</FormLabel>
+                <FormLabel>{t('checkout.address')} *</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="Masukkan alamat lengkap termasuk nomor rumah, nama jalan, dll."
@@ -443,7 +443,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
             name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Catatan Pesanan (Opsional)</FormLabel>
+                <FormLabel>{t('checkout.notes')}</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="Tambahkan catatan khusus untuk pesanan Anda..."
@@ -462,7 +462,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
             name="paymentMethod"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Pilih Metode Pembayaran *</FormLabel>
+                <FormLabel>{t('checkout.paymentMethod')} *</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
                   defaultValue={field.value}
@@ -473,10 +473,10 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-white border shadow-lg z-50">
-                    <SelectItem value="COD (Cash on Delivery)">COD (Cash on Delivery)</SelectItem>
-                    <SelectItem value="Bank Transfer (Rupiah)">Bank Transfer (Rupiah)</SelectItem>
-                    <SelectItem value="Bank Transfer (Yucho / ゆうちょ銀行)">Bank Transfer (Yucho / ゆうちょ銀行)</SelectItem>
-                    <SelectItem value="QRIS / QR Code">QRIS / QR Code (IDR)</SelectItem>
+                    <SelectItem value="COD (Cash on Delivery)">{t('checkout.cod')}</SelectItem>
+                    <SelectItem value="Bank Transfer (Rupiah)">{t('checkout.bankTransferRupiah')}</SelectItem>
+                    <SelectItem value="Bank Transfer (Yucho / ゆうちょ銀行)">{t('checkout.bankTransferYucho')}</SelectItem>
+                    <SelectItem value="QRIS / QR Code (IDR)">{t('checkout.qris')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -495,7 +495,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
           {/* Payment Proof Upload (Optional) */}
           {paymentMethod && paymentMethod !== 'COD (Cash on Delivery)' && (
             <div className="space-y-2">
-              <FormLabel>Bukti Pembayaran (Opsional)</FormLabel>
+              <FormLabel>{t('checkout.paymentProof')}</FormLabel>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                 <Input
                   type="file"
@@ -504,7 +504,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
                   className="mb-2"
                 />
                 <p className="text-xs text-gray-500">
-                  Format: JPG, PNG, WEBP, GIF (Maks. 5MB)
+                  {t('checkout.paymentProofFormats')}
                 </p>
                 
                 {paymentProofPreview && (
@@ -524,7 +524,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
                       </button>
                     </div>
                     <p className="text-sm text-green-600 mt-2">
-                      Bukti pembayaran siap diupload
+                      {t('checkout.paymentProofReady')}
                     </p>
                   </div>
                 )}
@@ -545,27 +545,27 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
           {/* Order Summary with Shipping Fee */}
           <div className="border-t border-b py-4 my-4 space-y-2">
             <div className="flex justify-between items-center">
-              <span className="font-medium">Subtotal Produk:</span>
+              <span className="font-medium">{t('checkout.productSubtotal')}</span>
               <span>¥{total.toLocaleString()}</span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="font-medium">Ongkos Kirim:</span>
+              <span className="font-medium">{t('checkout.shippingCost')}</span>
               {selectedPrefecture ? (
                 isLoadingShippingRate ? (
-                  <span className="text-gray-500">Memuat...</span>
+                  <span className="text-gray-500">{t('checkout.loading')}</span>
                 ) : shippingFee !== null ? (
                   <span>¥{shippingFee.toLocaleString()}</span>
                 ) : (
-                  <span className="text-yellow-600 text-sm">Ongkir belum diatur</span>
+                  <span className="text-yellow-600 text-sm">{t('checkout.shippingNotSet')}</span>
                 )
               ) : (
-                <span className="text-gray-500">Pilih prefektur</span>
+                <span className="text-gray-500">{t('checkout.selectPrefecture')}</span>
               )}
             </div>
             
             <div className="flex justify-between items-center pt-2 mt-2 text-lg font-bold">
-              <span>Total:</span>
+              <span>{t('cart.total')}</span>
               <span className="text-primary">¥{totalWithShipping.toLocaleString()}</span>
             </div>
           </div>
@@ -578,17 +578,15 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
             >
               <MessageCircle className="w-5 h-5" />
               <span>
-                {isSubmitting ? 'Memproses...' : 'Pesan via WhatsApp'}
+                {isSubmitting ? t('checkout.processing') : t('checkout.orderViaWhatsApp')}
               </span>
             </Button>
-            <p className="text-center text-sm text-gray-600 mt-2">
-              Pesanan akan disimpan di riwayat Anda dan dikirim ke WhatsApp
-            </p>
+            <p className="text-center text-sm text-gray-600 mt-2">{t('checkout.orderSaved')}</p>
             
             {selectedPrefecture && shippingFee === null && (
               <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-700">
-                  Ongkir untuk prefektur ini belum diatur. Silakan pilih prefektur lain atau hubungi admin.
+                  {t('checkout.shippingNotConfigured')}
                 </p>
               </div>
             )}

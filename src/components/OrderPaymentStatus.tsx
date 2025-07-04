@@ -55,7 +55,7 @@ const OrderPaymentStatus = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <div className="font-medium text-gray-700">Status Pembayaran:</div>
+        <div className="font-medium text-gray-700">{t('payment.status')}:</div>
         {getStatusBadge()}
       </div>
       
@@ -67,8 +67,8 @@ const OrderPaymentStatus = ({
             onClick={handleViewProof}
             className="text-blue-600 border-blue-200 hover:bg-blue-50"
           >
-            <Eye className="w-4 h-4 mr-2" />
-            Lihat Bukti Pembayaran
+            <Eye className="w-4 h-4 mr-2" /> 
+            {t('payment.viewPaymentProof')}
           </Button>
           
           {showProof && !onViewProof && (
@@ -95,13 +95,13 @@ const OrderPaymentStatus = ({
       
       {status === 'pending' && !paymentProofUrl && (
         <p className="text-sm text-yellow-600">
-          Belum ada bukti pembayaran yang diunggah
+          {t('payment.noPaymentProof')}
         </p>
       )}
       
       {status === 'rejected' && (
         <p className="text-sm text-red-600">
-          Pembayaran ditolak. Silakan hubungi admin untuk informasi lebih lanjut.
+          {t('payment.paymentRejectedMessage')}
         </p>
       )}
     </div>

@@ -164,14 +164,14 @@ const Orders = () => {
             <div className="flex items-center space-x-3">
               <ShoppingBag className="w-8 h-8 text-primary" />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Riwayat Pesanan</h1>
-                <p className="text-gray-600">Lihat semua pesanan Anda dan download invoice</p>
+                <h1 className="text-3xl font-bold text-gray-900">{t('orders.title')}</h1>
+                <p className="text-gray-600">{t('orders.subtitle')}</p>
               </div>
             </div>
             
             <Button onClick={handleRefresh} variant="outline" size="sm">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
+              <RefreshCw className="w-4 h-4 mr-2" /> 
+              {t('orders.refresh')}
             </Button>
           </div>
 
@@ -204,17 +204,17 @@ const Orders = () => {
               <CardContent className="py-12 text-center">
                 <Package className="w-16 h-16 text-gray-400 mx-auto mb-6" />
                 <h3 className="text-xl font-medium text-gray-900 mb-3">
-                  Belum Ada Pesanan
+                  {t('orders.noOrders')}
                 </h3>
                 <p className="text-gray-600 mb-8">
-                  Anda belum memiliki riwayat pesanan. Mulai berbelanja sekarang!
+                  {t('orders.noOrdersMessage')}
                 </p>
                 <a
                   href="/products"
                   className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
                 >
                   <ShoppingBag className="w-5 h-5 mr-2" />
-                  Mulai Belanja
+                  {t('cart.startShopping')}
                 </a>
               </CardContent>
             </Card>
@@ -226,7 +226,7 @@ const Orders = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <CardTitle className="text-lg flex items-center space-x-2">
-                          <span>Pesanan #{order.id.slice(-8).toUpperCase()}</span>
+                          <span>{t('orders.orderNumber')}{order.id.slice(-8).toUpperCase()}</span>
                         </CardTitle>
                         <CardDescription className="flex items-center mt-2">
                           <Calendar className="w-4 h-4 mr-1" />
@@ -247,7 +247,7 @@ const Orders = () => {
                     <div className="space-y-4">
                       {/* Order Items Summary - Show ALL items */}
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-3">Ringkasan Pesanan:</h4>
+                        <h4 className="font-medium text-gray-900 mb-3">{t('orders.orderSummary')}</h4>
                         <div className="space-y-2">
                           {order.items.map((item, index) => (
                             <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
@@ -279,22 +279,22 @@ const Orders = () => {
 
                       {/* Customer Info Summary */}
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900 mb-2">Informasi Pengiriman:</h4>
+                        <h4 className="font-medium text-gray-900 mb-2">{t('orders.shippingInfo')}</h4>
                         <div className="text-sm text-gray-600 space-y-1">
-                          <p><span className="font-medium">Nama:</span> {order.customer_info.name}</p>
-                          <p><span className="font-medium">Alamat:</span> {order.customer_info.address}</p>
-                          <p><span className="font-medium">Prefek:</span> {order.customer_info.prefecture}</p>
-                          <p><span className="font-medium">Kode Pos:</span> {order.customer_info.postal_code}</p>
+                          <p><span className="font-medium">{t('orders.name')}</span> {order.customer_info.name}</p>
+                          <p><span className="font-medium">{t('orders.address')}</span> {order.customer_info.address}</p>
+                          <p><span className="font-medium">{t('orders.prefecture')}</span> {order.customer_info.prefecture}</p>
+                          <p><span className="font-medium">{t('orders.postalCode')}</span> {order.customer_info.postal_code}</p>
                         </div>
                       </div>
 
                       {/* Payment Status Section */}
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                        <h4 className="font-medium text-blue-800 mb-3">Informasi Pembayaran:</h4>
+                        <h4 className="font-medium text-blue-800 mb-3">{t('orders.paymentInfo')}</h4>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <div>
                             <p className="text-sm font-medium text-blue-700">
-                              Metode: {order.customer_info.payment_method || 'Tidak tersedia'}
+                              {t('payment.method')}: {order.customer_info.payment_method || 'Tidak tersedia'}
                             </p>
                             <OrderPaymentStatus 
                               status={getPaymentStatus(order)} 
@@ -311,7 +311,7 @@ const Orders = () => {
                               className="text-blue-600 border-blue-200 hover:bg-blue-50"
                             >
                               <Upload className="w-4 h-4 mr-2" />
-                              Upload Bukti
+                              {t('buttons.uploadProof')}
                             </Button>
                           )}
                         </div>
@@ -334,7 +334,7 @@ const Orders = () => {
                           className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           <FileText className="w-4 h-4 mr-2" />
-                          Lihat Invoice
+                          {t('buttons.viewInvoice')}
                         </Button>
                         <Button 
                           variant="outline"
@@ -342,7 +342,7 @@ const Orders = () => {
                           onClick={() => handleShowInvoice(order)}
                         >
                           <Eye className="w-4 h-4 mr-2" />
-                          Detail Pesanan
+                          {t('buttons.orderDetails')}
                         </Button>
                       </div>
 
@@ -357,22 +357,22 @@ const Orders = () => {
                             'bg-red-400'
                           }`}></div>
                           <span className={`text-sm font-medium ${getStatusColor(order.status || 'pending')}`}>
-                            Status: {getStatusText(order.status || 'pending')}
+                            {t('orders.status')} {getStatusText(order.status || 'pending')}
                           </span>
                         </div>
                         {order.status === 'pending' && (
                           <p className="text-xs text-gray-500 mt-1 ml-5">
-                            Pesanan Anda sedang menunggu konfirmasi admin
+                            {t('orders.pending')}
                           </p>
                         )}
                         {order.status === 'confirmed' && (
                           <p className="text-xs text-gray-500 mt-1 ml-5">
-                            Pesanan telah dikonfirmasi dan sedang diproses
+                            {t('orders.confirmed')}
                           </p>
                         )}
                         {order.status === 'completed' && (
                           <p className="text-xs text-gray-500 mt-1 ml-5">
-                            Pesanan telah selesai dan dikirim
+                            {t('orders.completed')}
                           </p>
                         )}
                       </div>

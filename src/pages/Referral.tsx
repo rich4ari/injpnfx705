@@ -38,7 +38,7 @@ const ReferralContent = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Program Affiliate</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">{t('affiliate.title')}</h1>
           <JoinAffiliateCard />
         </div>
       </div>
@@ -47,7 +47,7 @@ const ReferralContent = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Dashboard Affiliate</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">{t('affiliate.dashboard')}</h1>
       
       <div className="mb-8">
         <AffiliateStats />
@@ -64,10 +64,10 @@ const ReferralContent = () => {
       
       <Tabs defaultValue="referrals" className="mb-8">
         <TabsList className="mb-4">
-          <TabsTrigger value="referrals">Referral</TabsTrigger>
-          <TabsTrigger value="commissions">Komisi</TabsTrigger>
-          <TabsTrigger value="followers">Pengikut</TabsTrigger>
-          <TabsTrigger value="payouts">Pencairan</TabsTrigger>
+          <TabsTrigger value="referrals">{t('affiliate.referrals')}</TabsTrigger>
+          <TabsTrigger value="commissions">{t('affiliate.commissions')}</TabsTrigger>
+          <TabsTrigger value="followers">{t('affiliate.followers')}</TabsTrigger>
+          <TabsTrigger value="payouts">{t('affiliate.payouts')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="referrals">

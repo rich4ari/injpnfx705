@@ -36,6 +36,16 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     const keys = key.split('.');
     let value: any = translations[language];
     
+    // Handle string interpolation with parameters
+    const interpolate = (text: string, params?: Record<string, any>): string => {
+      if (!params) return text;
+      
+      return text.replace(/{([^}]*)}/g, (match, key) => {
+        const value = params[key];
+        return value !== undefined ? value : match;
+      });
+    };
+    
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
@@ -53,7 +63,29 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     
-    return typeof value === 'string' ? value : key;
+    // If the value is a string, return it (possibly interpolated)
+    if (typeof value === 'string') {
+      // Check if this is a call with parameters
+      const match = key.match(/^(.+),\s*(.+)$/);
+      if (match) {
+        try {
+          const actualKey = match[1];
+          const paramsStr = match[2];
+          const params = JSON.parse(`{${paramsStr}}`);
+          
+          // Get the string again without the params part
+          const baseValue = t(actualKey);
+          return interpolate(baseValue, params);
+        } catch (e) {
+          console.error('Error parsing parameters for translation:', e);
+          return value;
+        }
+      }
+      
+      return value;
+    }
+    
+    return key;
   };
 
   // Memoize the context value to prevent unnecessary re-renders

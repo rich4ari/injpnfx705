@@ -124,7 +124,7 @@ const PayoutRequestForm = () => {
       <CardHeader>
         <CardTitle className="flex items-center">
           <DollarSign className="w-5 h-5 mr-2" />
-          Ajukan Pencairan
+          {t('affiliate.requestPayout')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -132,10 +132,12 @@ const PayoutRequestForm = () => {
           <div className="bg-yellow-50 p-4 rounded-md flex items-start space-x-3">
             <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5" />
             <div>
-              <h4 className="font-medium text-yellow-800">Belum Bisa Mencairkan</h4>
+              <h4 className="font-medium text-yellow-800">{t('affiliate.notEligibleForPayout')}</h4>
               <p className="text-sm text-yellow-700 mt-1">
-                Komisi pending Anda (¥{maxAmount.toLocaleString()}) belum mencapai jumlah minimum pencairan 
-                (¥{minAmount.toLocaleString()}).
+                {t('affiliate.pendingCommissionMessage', { 
+                  available: maxAmount.toLocaleString(), 
+                  minimum: minAmount.toLocaleString() 
+                })}
               </p>
             </div>
           </div>
@@ -147,7 +149,7 @@ const PayoutRequestForm = () => {
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Jumlah Pencairan (¥)</FormLabel>
+                    <FormLabel>{t('affiliate.payoutAmount')}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -158,7 +160,7 @@ const PayoutRequestForm = () => {
                       />
                     </FormControl>
                     <p className="text-xs text-gray-500">
-                      Tersedia: ¥{maxAmount.toLocaleString()} | Minimum: ¥{minAmount.toLocaleString()}
+                      {t('affiliate.available')} ¥{maxAmount.toLocaleString()} | {t('affiliate.minimum')} ¥{minAmount.toLocaleString()}
                     </p>
                     <FormMessage />
                   </FormItem>
@@ -170,7 +172,7 @@ const PayoutRequestForm = () => {
                 name="method"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Metode Pembayaran</FormLabel>
+                    <FormLabel>{t('affiliate.paymentMethod')}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -195,8 +197,8 @@ const PayoutRequestForm = () => {
 
               <div className="bg-gray-50 p-4 rounded-md space-y-4">
                 <div className="flex items-center">
-                  <CreditCard className="w-5 h-5 text-gray-500 mr-2" />
-                  <h4 className="font-medium">Informasi Rekening</h4>
+                  <CreditCard className="w-5 h-5 text-gray-500 mr-2" /> 
+                  <h4 className="font-medium">{t('affiliate.bankInfo')}</h4>
                 </div>
 
                 <FormField
@@ -204,7 +206,7 @@ const PayoutRequestForm = () => {
                   name="bankName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nama Bank</FormLabel>
+                      <FormLabel>{t('affiliate.bankName')}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Contoh: BCA, Mandiri, BNI" />
                       </FormControl>
@@ -218,7 +220,7 @@ const PayoutRequestForm = () => {
                   name="accountNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nomor Rekening</FormLabel>
+                      <FormLabel>{t('affiliate.accountNumber')}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Masukkan nomor rekening" />
                       </FormControl>
@@ -232,7 +234,7 @@ const PayoutRequestForm = () => {
                   name="accountName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nama Pemilik Rekening</FormLabel>
+                      <FormLabel>{t('affiliate.accountHolderName')}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Masukkan nama pemilik rekening" />
                       </FormControl>
@@ -245,12 +247,12 @@ const PayoutRequestForm = () => {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isSubmitting || !canRequestPayout}
+                    {t('affiliate.requestPayoutButton')}
               >
                 {isSubmitting ? 'Memproses...' : 'Ajukan Pencairan'}
               </Button>
             </form>
-          </Form>
+                    {t('buttons.processing')}
         )}
       </CardContent>
     </Card>

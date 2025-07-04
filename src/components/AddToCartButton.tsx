@@ -123,7 +123,7 @@ const AddToCartButton = ({
                   <Plus className="w-0.5 h-0.5 text-red-600" strokeWidth={4} />
                 </motion.div>
               )}
-            </div>
+            {isOutOfStock ? t('buttons.outOfStock') : isAdded ? '✓ Ditambahkan' : t('buttons.addToCart')}
           )}
         </motion.div>
         

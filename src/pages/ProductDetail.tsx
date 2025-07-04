@@ -79,7 +79,7 @@ const ProductDetail = () => {
     if (hasVariants && !selectedVariant) {
       toast({
         title: "Pilih Varian",
-        description: "Silakan pilih varian produk sebelum menambah ke keranjang",
+        description: t('productDetail.selectVariantMessage'),
         variant: "destructive"
       });
       return;
@@ -89,8 +89,8 @@ const ProductDetail = () => {
     const effectiveStock = getEffectiveStock();
     if (effectiveStock < quantity) {
       toast({
-        title: "Stok Tidak Cukup",
-        description: `Stok tersedia hanya ${effectiveStock}`,
+        title: t('productDetail.insufficientStock'),
+        description: t('productDetail.availableStockOnly', { stock: effectiveStock }),
         variant: "destructive"
       });
       return;
@@ -116,7 +116,10 @@ const ProductDetail = () => {
 
     toast({
       title: "Berhasil!",
-      description: `${product.name}${selectedVariant ? ` (${selectedVariant.name})` : ''} ditambahkan ke keranjang`,
+      description: t('productDetail.addedToCart', { 
+        name: product.name, 
+        variant: selectedVariant ? ` (${selectedVariant.name})` : '' 
+      }),
     });
   };
 
@@ -206,7 +209,7 @@ const ProductDetail = () => {
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold mb-3">Deskripsi Produk</h3>
+              <h3 className="text-lg font-semibold mb-3">{t('productDetail.description')}</h3>
               <p className="text-gray-600 leading-relaxed">{product.description}</p>
             </div>
 
@@ -223,7 +226,7 @@ const ProductDetail = () => {
             )}
 
             <div>
-              <h3 className="text-lg font-semibold mb-3">Ketersediaan</h3>
+              <h3 className="text-lg font-semibold mb-3">{t('productDetail.availability')}</h3>
               <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
                 effectiveStock > 10 
                   ? 'bg-green-100 text-green-800' 
@@ -231,13 +234,13 @@ const ProductDetail = () => {
                     ? 'bg-yellow-100 text-yellow-800'
                     : 'bg-red-100 text-red-800'
               }`}>
-                {effectiveStock > 0 ? `Tersedia (${effectiveStock})` : 'Stok Habis'}
+                {effectiveStock > 0 ? `${t('productDetail.available')} (${effectiveStock})` : t('buttons.outOfStock')}
               </div>
             </div>
 
             {effectiveStock > 0 && (
               <div ref={quantityRef}>
-                <h3 className="text-lg font-semibold mb-3">Jumlah</h3>
+                <h3 className="text-lg font-semibold mb-3">{t('productDetail.quantity')}</h3>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center border border-gray-300 rounded-lg">
                     <button
@@ -256,7 +259,7 @@ const ProductDetail = () => {
                   </div>
                   
                   <div className="text-lg font-semibold">
-                    Total: {formatPrice(effectivePrice * quantity)}
+                    {t('productDetail.total')} {formatPrice(effectivePrice * quantity)}
                   </div>
                 </div>
               </div>
@@ -283,8 +286,8 @@ const ProductDetail = () => {
                 <ShoppingCart className="w-5 h-5 group-hover:animate-bounce" />
                 <span>
                   {hasVariants && !selectedVariant 
-                    ? 'Pilih Varian Terlebih Dahulu' 
-                    : 'Tambahkan ke Keranjang'
+                    ? t('buttons.selectVariant')
+                    : t('buttons.addToCart')
                   }
                 </span>
               </button>
@@ -294,7 +297,7 @@ const ProductDetail = () => {
                 className="w-full bg-gray-400 text-white text-lg py-4 rounded-xl cursor-not-allowed flex items-center justify-center space-x-3"
               >
                 <ShoppingCart className="w-5 h-5" />
-                <span>Stok Habis</span>
+                <span>{t('buttons.outOfStock')}</span>
               </button>
             )}
 
@@ -303,15 +306,15 @@ const ProductDetail = () => {
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Truck className="w-6 h-6 text-blue-600" />
                 </div>
-                <div className="text-sm font-semibold text-gray-800 mb-1">Pengiriman Express</div>
-                <div className="text-xs text-gray-600">Dikirim dengan layanan terpercaya</div>
+                <div className="text-sm font-semibold text-gray-800 mb-1">{t('productDetail.expressShipping')}</div>
+                <div className="text-xs text-gray-600">{t('productDetail.shippedWith')}</div>
               </div>
               <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Check className="w-6 h-6 text-green-600" />
                 </div>
-                <div className="text-sm font-semibold text-gray-800 mb-1">Kualitas Premium</div>
-                <div className="text-xs text-gray-600">Produk berkualitas tinggi terjamin</div>
+                <div className="text-sm font-semibold text-gray-800 mb-1">{t('productDetail.premiumQuality')}</div>
+                <div className="text-xs text-gray-600">{t('productDetail.guaranteedQuality')}</div>
               </div>
             </div>
           </div>
@@ -319,7 +322,7 @@ const ProductDetail = () => {
 
         {relatedProducts.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold mb-8">Produk Sejenis</h2>
+            <h2 className="text-2xl font-bold mb-8">{t('productDetail.similarProducts')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedProducts.map((relatedProduct) => (
                 <div key={relatedProduct.id} className="card-product p-4">
