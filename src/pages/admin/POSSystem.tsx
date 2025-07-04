@@ -409,27 +409,54 @@ const POSSystem = () => {
     try {
       // Dynamically import html2canvas and jsPDF
       const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
+      const jsPDF = (await import('jspdf')).default;
       
-      // Create canvas from receipt element
+      // Create a clone of the receipt element with simplified styling for PDF
+      const receiptClone = receiptRef.current.cloneNode(true) as HTMLElement;
+      document.body.appendChild(receiptClone);
+      receiptClone.style.position = 'absolute';
+      receiptClone.style.left = '-9999px';
+      receiptClone.style.fontFamily = 'Courier, monospace';
+      receiptClone.style.width = '300px';
+      receiptClone.style.padding = '10px';
+      receiptClone.style.backgroundColor = 'white';
+      
+      // Create canvas from the clone
       const canvas = await html2canvas(receiptRef.current, {
         scale: 2, // Higher resolution
         allowTaint: true,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 300,
+        height: receiptRef.current.offsetHeight
       });
+      
+      // Remove the clone after canvas creation
+      document.body.removeChild(receiptClone);
       
       // Create PDF (80mm width typical for receipts)
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: [80, 200] // Width: 80mm, Height: auto (max 200mm)
+        format: 'a4'
       });
       
-      // Add image to PDF
+      // Calculate dimensions to fit receipt in PDF
+      const imgWidth = 80; // 80mm width
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      // Calculate height while maintaining aspect ratio
+      const ratio = canvas.height / canvas.width;
+      const imgHeight = imgWidth * ratio;
+      
+      // Center horizontally
+      const x = (pageWidth - imgWidth) / 2;
+      
+      // Add image to PDF with calculated dimensions
       const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 0, 0, 80, 0);
+      pdf.addImage(imgData, 'PNG', x, 10, imgWidth, imgHeight);
       
       // Save PDF
       pdf.save(`struk-${currentTransaction?.id.slice(0, 8)}.pdf`);
@@ -961,10 +988,10 @@ const POSSystem = () => {
           {currentTransaction && (
             <div className="py-4" id="receipt-content" ref={receiptRef}>
               <div className="font-mono" style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
-                <div className="text-center mb-4">
+                <div className="text-center mb-4 receipt-header">
                   <h3 className="font-bold text-lg">INJAPAN FOOD</h3>
                   <p className="text-sm">POS KASIR (JULI 2025)</p>
-                  <div className="border-t border-b border-dashed my-2 py-1">
+                  <div className="border-t border-b border-dashed my-2 py-1 receipt-divider">
                     <p className="text-xs">
                       {formatDate(currentTransaction.createdAt)}
                     </p>
@@ -975,7 +1002,7 @@ const POSSystem = () => {
                 </div>
                 
                 <div className="text-sm mb-4">
-                  <div className="flex justify-between font-bold border-b border-dashed pb-1 mb-2">
+                  <div className="flex justify-between font-bold border-b border-dashed pb-1 mb-2 receipt-header-row">
                     <span>Produk</span>
                     <div className="flex space-x-2">
                       <span>Qty</span>
@@ -985,39 +1012,39 @@ const POSSystem = () => {
                   </div>
                   
                   {currentTransaction.items.map((item: any, index: number) => (
-                    <div key={index} className="flex justify-between text-xs mb-2">
-                      <div className="max-w-[120px] truncate">
+                    <div key={index} className="flex justify-between text-xs mb-2 receipt-item">
+                      <div className="max-w-[120px] truncate receipt-item-name">
                         {item.product.name}
                       </div>
-                      <div className="flex space-x-2">
-                        <span className="w-6 text-center">{item.quantity}</span>
-                        <span className="w-16 text-right">{formatCurrency(item.price)}</span>
-                        <span className="w-16 text-right font-medium">{formatCurrency(item.totalPrice)}</span>
+                      <div className="flex space-x-2 receipt-item-details">
+                        <span className="w-6 text-center receipt-item-qty">{item.quantity}</span>
+                        <span className="w-16 text-right receipt-item-price">{formatCurrency(item.price)}</span>
+                        <span className="w-16 text-right font-medium receipt-item-total">{formatCurrency(item.totalPrice)}</span>
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                <div className="border-t border-dashed pt-2 mb-2">
-                  <div className="flex justify-between text-sm">
+                <div className="border-t border-dashed pt-2 mb-2 receipt-summary">
+                  <div className="flex justify-between text-sm receipt-total">
                     <span className="font-bold">Total</span>
                     <span className="font-bold">{formatCurrency(currentTransaction.totalAmount)}</span>
                   </div>
                   
                   {currentTransaction.paymentMethod === 'cash' && (
                     <>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm receipt-payment">
                         <span>Tunai</span>
                         <span>{formatCurrency(currentTransaction.cashReceived)}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm receipt-change">
                         <span>Kembali</span>
                         <span>{formatCurrency(currentTransaction.change)}</span>
                       </div>
                     </>
                   )}
                   
-                  <div className="flex justify-between text-xs mt-1">
+                  <div className="flex justify-between text-xs mt-1 receipt-method">
                     <span>Metode:</span>
                     <span>
                       {currentTransaction.paymentMethod === 'cash' ? 'Tunai' : 
@@ -1028,7 +1055,7 @@ const POSSystem = () => {
                   </div>
                 </div>
                 
-                <div className="text-center text-xs mt-4">
+                <div className="text-center text-xs mt-4 receipt-footer">
                   <p className="font-medium">Terima kasih!</p>
                   <p className="text-[10px] mt-1">ID: {currentTransaction.id.slice(0, 8)}</p>
                 </div>

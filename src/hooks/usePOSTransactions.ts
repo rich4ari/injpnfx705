@@ -24,6 +24,7 @@ export const usePOSTransactions = (date?: string) => {
       const endDateStr = nextDay.toISOString();
       
       console.log(`Fetching POS transactions between ${startDateStr} and ${endDateStr}`);
+      console.log('Date filter:', { date, selectedDate, nextDay });
       
       // Create query - using simple query to avoid index requirements
       const transactionsRef = collection(db, 'pos_transactions');
@@ -60,13 +61,18 @@ export const usePOSTransactions = (date?: string) => {
             try {
               const data = doc.data();
               // Ensure all required fields exist
-              if (data && data.createdAt && data.items && data.totalAmount) {
+              if (data && data.createdAt && Array.isArray(data.items) && typeof data.totalAmount === 'number') {
                 transactionData.push({ 
                   id: doc.id, 
                   ...data 
                 } as POSTransaction);
               } else {
-                console.warn(`Skipping transaction ${doc.id} due to missing required fields`);
+                console.warn(`Skipping transaction ${doc.id} due to missing required fields:`, {
+                  hasCreatedAt: !!data?.createdAt,
+                  hasItems: !!data?.items,
+                  isItemsArray: Array.isArray(data?.items),
+                  hasTotalAmount: typeof data?.totalAmount === 'number'
+                });
               }
             } catch (docError) {
               console.error(`Error processing transaction document ${doc.id}:`, docError);
@@ -77,7 +83,11 @@ export const usePOSTransactions = (date?: string) => {
           if (date) {
             console.log(`Filtering transactions by date: ${date}`);
             transactionData = transactionData.filter(t => {
-              if (!t.createdAt) return false;
+              if (!t.createdAt) {
+                console.log(`Transaction ${t.id} has no createdAt field`);
+                return false;
+              }
+              
               const txDate = new Date(t.createdAt);
               const isInRange = txDate >= new Date(startDateStr) && txDate < new Date(endDateStr);
               console.log(`Transaction ${t.id} date: ${txDate}, in range: ${isInRange}`);

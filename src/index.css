@@ -114,12 +114,13 @@
 /* Print styles for POS receipt */
 @media print {
   body * {
-    visibility: hidden;
+    display: none;
   }
   
   #receipt-content,
   #receipt-content * {
-    visibility: visible;
+    display: block;
+    visibility: visible !important;
   }
   
   #receipt-content {
@@ -130,6 +131,9 @@
     padding: 5mm;
     font-family: 'Courier New', monospace;
     font-size: 12px;
+    background-color: white;
+    color: black;
+    margin: 0;
   }
   
   /* Hide UI elements during print */
@@ -138,5 +142,72 @@
   .dialog-header,
   .dialog-footer {
     display: none !important;
+  }
+  
+  /* Receipt specific styles */
+  .receipt-header {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .receipt-divider {
+    border-top: 1px dashed #000;
+    border-bottom: 1px dashed #000;
+    margin: 8px 0;
+    padding: 4px 0;
+  }
+  
+  .receipt-header-row {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    border-bottom: 1px dashed #000;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+  }
+  
+  .receipt-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+  
+  .receipt-item-name {
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .receipt-item-details {
+    display: flex;
+  }
+  
+  .receipt-item-qty {
+    width: 24px;
+    text-align: center;
+  }
+  
+  .receipt-item-price, .receipt-item-total {
+    width: 64px;
+    text-align: right;
+  }
+  
+  .receipt-summary {
+    border-top: 1px dashed #000;
+    padding-top: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .receipt-total, .receipt-payment, .receipt-change, .receipt-method {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .receipt-footer {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 10px;
   }
 }
