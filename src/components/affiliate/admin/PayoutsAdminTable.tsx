@@ -14,6 +14,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, CreditCard, RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +35,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 const PayoutsAdminTable = () => {
-  const { payouts, loading, processPayout } = useAffiliateAdmin();
+  const { payouts, loading, processPayout, selectedMonth, setSelectedMonth, availableMonths } = useAffiliateAdmin();
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPayoutId, setSelectedPayoutId] = useState<string | null>(null);
@@ -101,6 +108,15 @@ const PayoutsAdminTable = () => {
     }
   };
 
+  // Format month for display
+  const formatMonth = (monthStr: string) => {
+    const [year, month] = monthStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  };
+
+  const currentMonthDisplay = selectedMonth ? formatMonth(selectedMonth) : 'Bulan Ini';
+
   if (loading) {
     return (
       <Card>
@@ -125,27 +141,46 @@ const PayoutsAdminTable = () => {
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
           <CardTitle className="flex items-center">
-            <CreditCard className="w-5 h-5 mr-2" />
-            Manajemen Pencairan
-            {pendingPayouts.length > 0 && (
-              <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 border-yellow-200">
-                {pendingPayouts.length} Pending
+            <div className="flex items-center">
+              <CreditCard className="w-5 h-5 mr-2" />
+              <span>Manajemen Pencairan</span>
+              {pendingPayouts.length > 0 && (
+                <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 border-yellow-200">
+                  {pendingPayouts.length} Pending
+                </Badge>
+              )}
+              {processingPayouts.length > 0 && (
+                <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
+                  {processingPayouts.length} Diproses
+                </Badge>
+              )}
+              <Badge variant="outline" className="ml-2">
+                {currentMonthDisplay}
               </Badge>
-            )}
-            {processingPayouts.length > 0 && (
-              <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
-                {processingPayouts.length} Diproses
-              </Badge>
-            )}
+            </div>
           </CardTitle>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Cari pencairan..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Pilih Bulan" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableMonths.map((month) => (
+                  <SelectItem key={month} value={month}>
+                    {formatMonth(month)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Cari pencairan..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
         </div>
       </CardHeader>

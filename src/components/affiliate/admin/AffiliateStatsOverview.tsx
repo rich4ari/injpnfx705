@@ -1,9 +1,11 @@
 import { useAffiliateAdmin } from '@/hooks/useAffiliateAdmin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Users, ShoppingCart, DollarSign } from 'lucide-react';
+import { TrendingUp, Users, ShoppingCart, DollarSign, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const AffiliateStatsOverview = () => {
-  const { affiliates, commissions, loading } = useAffiliateAdmin();
+  const { affiliates, commissions, loading, selectedMonth, setSelectedMonth, availableMonths } = useAffiliateAdmin();
 
   if (loading) {
     return (
@@ -23,6 +25,15 @@ const AffiliateStatsOverview = () => {
     );
   }
 
+  // Format month for display
+  const formatMonth = (monthStr: string) => {
+    const [year, month] = monthStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  };
+
+  const currentMonthDisplay = selectedMonth ? formatMonth(selectedMonth) : 'Bulan Ini';
+
   // Calculate total stats
   const totalAffiliates = affiliates.length;
   
@@ -37,6 +48,13 @@ const AffiliateStatsOverview = () => {
   const pendingCommissions = commissions.filter(commission => commission.status === 'pending').length;
 
   const stats = [
+    {
+      title: 'Periode Data',
+      value: currentMonthDisplay,
+      icon: Calendar,
+      color: 'bg-purple-500',
+      description: 'Data affiliate bulan ini'
+    },
     {
       title: 'Total Affiliate',
       value: totalAffiliates,
@@ -67,28 +85,51 @@ const AffiliateStatsOverview = () => {
     }
   ];
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat, index) => {
-        const Icon = stat.icon;
-        return (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                {stat.title}
-              </CardTitle>
-              <div className={`p-2 rounded-full ${stat.color}`}>
-                <Icon className="w-4 h-4 text-white" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
-            </CardContent>
-          </Card>
-        );
-      })}
+  // Month selector component
+  const renderMonthSelector = () => (
+    <div className="mb-4 flex justify-end">
+      <div className="w-64">
+        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+          <SelectTrigger>
+            <SelectValue placeholder="Pilih Bulan" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableMonths.map((month) => (
+              <SelectItem key={month} value={month}>
+                {formatMonth(month)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
+  );
+
+  return (
+    <>
+      {renderMonthSelector()}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={index} className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">
+                  {stat.title}
+                </CardTitle>
+                <div className={`p-2 rounded-full ${stat.color}`}>
+                  <Icon className="w-4 h-4 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </>
   );
 };
 

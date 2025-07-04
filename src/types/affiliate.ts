@@ -115,3 +115,28 @@ export interface AffiliatePayout {
   rejectedBy?: string;
   notes?: string;
 }
+
+export interface AffiliateMonthlyStats {
+  month: string; // Format: YYYY-MM
+  totalClicks: number;
+  totalReferrals: number;
+  totalCommission: number;
+  pendingCommission: number;
+  paidCommission: number;
+  conversionRate: number;
+  method: string;
+  status: 'pending' | 'processing' | 'completed' | 'rejected';
+  bankInfo?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+  };
+  requestedAt: string;
+  processedAt?: string;
+  completedAt?: string;
+  rejectedAt?: string;
+  processedBy?: string;
+  completedBy?: string;
+  rejectedBy?: string;
+  notes?: string;
+}

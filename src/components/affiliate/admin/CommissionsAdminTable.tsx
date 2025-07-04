@@ -14,6 +14,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, DollarSign, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +35,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 const CommissionsAdminTable = () => {
-  const { commissions, loading, approveCommission, rejectCommission } = useAffiliateAdmin();
+  const { commissions, loading, approveCommission, rejectCommission, selectedMonth, setSelectedMonth, availableMonths } = useAffiliateAdmin();
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedCommissionId, setSelectedCommissionId] = useState<string | null>(null);
@@ -66,6 +73,15 @@ const CommissionsAdminTable = () => {
       minute: '2-digit'
     });
   };
+
+  // Format month for display
+  const formatMonth = (monthStr: string) => {
+    const [year, month] = monthStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  };
+
+  const currentMonthDisplay = selectedMonth ? formatMonth(selectedMonth) : 'Bulan Ini';
 
   const handleApprove = async (commissionId: string) => {
     try {
@@ -135,22 +151,41 @@ const CommissionsAdminTable = () => {
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
           <CardTitle className="flex items-center">
-            <DollarSign className="w-5 h-5 mr-2" />
-            Manajemen Komisi
-            {pendingCommissions.length > 0 && (
-              <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 border-yellow-200">
-                {pendingCommissions.length} Pending
+            <div className="flex items-center">
+              <DollarSign className="w-5 h-5 mr-2" />
+              <span>Manajemen Komisi</span>
+              {pendingCommissions.length > 0 && (
+                <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 border-yellow-200">
+                  {pendingCommissions.length} Pending
+                </Badge>
+              )}
+              <Badge variant="outline" className="ml-2">
+                {currentMonthDisplay}
               </Badge>
-            )}
+            </div>
           </CardTitle>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Cari komisi..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Pilih Bulan" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableMonths.map((month) => (
+                  <SelectItem key={month} value={month}>
+                    {formatMonth(month)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Cari komisi..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
         </div>
       </CardHeader>

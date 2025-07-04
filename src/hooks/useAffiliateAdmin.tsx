@@ -12,6 +12,7 @@ import {
 import { 
   AffiliateUser, 
   AffiliateSettings,
+  AffiliateReferral,
   AffiliatePayout,
   AffiliateCommission
 } from '@/types/affiliate';
@@ -21,10 +22,14 @@ import { db } from '@/config/firebase';
 interface AffiliateAdminContextType {
   affiliates: AffiliateUser[];
   settings: AffiliateSettings | null;
+  referrals: AffiliateReferral[];
   payouts: AffiliatePayout[];
   commissions: AffiliateCommission[];
   loading: boolean;
   error: string | null;
+  selectedMonth: string;
+  setSelectedMonth: (month: string) => void;
+  availableMonths: string[];
   updateSettings: (settings: Partial<AffiliateSettings>) => Promise<void>;
   processPayout: (payoutId: string, status: 'processing' | 'completed' | 'rejected', notes?: string) => Promise<void>;
   approveCommission: (commissionId: string) => Promise<void>;
@@ -36,11 +41,25 @@ const AffiliateAdminContext = createContext<AffiliateAdminContextType | undefine
 export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const [affiliates, setAffiliates] = useState<AffiliateUser[]>([]);
+  const [allAffiliates, setAllAffiliates] = useState<AffiliateUser[]>([]);
   const [settings, setSettings] = useState<AffiliateSettings | null>(null);
+  const [referrals, setReferrals] = useState<AffiliateReferral[]>([]);
+  const [allReferrals, setAllReferrals] = useState<AffiliateReferral[]>([]);
   const [payouts, setPayouts] = useState<AffiliatePayout[]>([]);
+  const [allPayouts, setAllPayouts] = useState<AffiliatePayout[]>([]);
   const [commissions, setCommissions] = useState<AffiliateCommission[]>([]);
+  const [allCommissions, setAllCommissions] = useState<AffiliateCommission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
+  
+  // Get current month in YYYY-MM format
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+  
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
 
   // Load initial data
   useEffect(() => {
@@ -65,6 +84,41 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
         // Get all payouts
         const payoutsData = await getAllPayouts();
         setPayouts(payoutsData);
+        setAllPayouts(payoutsData);
+        
+        // Get all referrals
+        const referralsRef = collection(db, 'affiliate_referrals');
+        const referralsSnapshot = await getDocs(referralsRef);
+        const referralsData = referralsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as AffiliateReferral));
+        setReferrals(referralsData);
+        setAllReferrals(referralsData);
+        
+        // Extract available months from all data
+        const extractMonths = (items: any[], dateField: string) => {
+          return items.map(item => {
+            const date = new Date(item[dateField]);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          });
+        };
+        
+        const commissionMonths = extractMonths(payoutsData, 'requestedAt');
+        const payoutMonths = extractMonths(payoutsData, 'requestedAt');
+        const referralMonths = extractMonths(referralsData, 'createdAt');
+        
+        // Combine all months, remove duplicates, and sort in descending order
+        const allMonths = [...new Set([...commissionMonths, ...payoutMonths, ...referralMonths])];
+        allMonths.sort((a, b) => b.localeCompare(a)); // Sort descending
+        
+        // Add current month if not already in the list
+        const currentMonth = getCurrentMonth();
+        if (!allMonths.includes(currentMonth)) {
+          allMonths.unshift(currentMonth);
+        }
+        
+        setAvailableMonths(allMonths);
         
         setLoading(false);
       } catch (err) {
@@ -76,6 +130,33 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
 
     loadInitialData();
   }, [user]);
+
+  // Filter data based on selected month
+  useEffect(() => {
+    if (!selectedMonth) return;
+    
+    const filterByMonth = (items: any[], dateField: string) => {
+      return items.filter(item => {
+        if (!item[dateField]) return false;
+        const date = new Date(item[dateField]);
+        const itemMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        return itemMonth === selectedMonth;
+      });
+    };
+    
+    // Filter affiliates by createdAt
+    setAffiliates(filterByMonth(allAffiliates, 'createdAt'));
+    
+    // Filter commissions by createdAt
+    setCommissions(filterByMonth(allCommissions, 'createdAt'));
+    
+    // Filter payouts by requestedAt
+    setPayouts(filterByMonth(allPayouts, 'requestedAt'));
+    
+    // Filter referrals by createdAt
+    setReferrals(filterByMonth(allReferrals, 'createdAt'));
+    
+  }, [selectedMonth, allAffiliates, allCommissions, allPayouts, allReferrals]);
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -95,6 +176,7 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
             id: doc.id,
             ...doc.data()
           } as AffiliateUser));
+          setAllAffiliates(affiliatesData);
           
           setAffiliates(affiliatesData);
         },
@@ -114,6 +196,7 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
             id: doc.id,
             ...doc.data()
           } as AffiliateCommission));
+          setAllCommissions(commissionsData);
           
           // Sort in memory instead of using Firestore ordering
           commissionsData.sort((a, b) => {
@@ -140,6 +223,7 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
             id: doc.id,
             ...doc.data()
           } as AffiliatePayout));
+          setAllPayouts(payoutsData);
           
           // Sort in memory instead of using Firestore ordering
           payoutsData.sort((a, b) => {
@@ -155,6 +239,54 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
           setError('Failed to subscribe to payouts');
         }
       );
+      
+      // Subscribe to referrals
+      const referralsRef = collection(db, 'affiliate_referrals');
+      
+      unsubscribeReferrals = onSnapshot(
+        referralsRef,
+        (snapshot) => {
+          const referralsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as AffiliateReferral));
+          setAllReferrals(referralsData);
+          
+          // Filter by selected month
+          if (selectedMonth) {
+            const filtered = referralsData.filter(referral => {
+              if (!referral.createdAt) return false;
+              const date = new Date(referral.createdAt);
+              const referralMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+              return referralMonth === selectedMonth;
+            });
+            setReferrals(filtered);
+          } else {
+            setReferrals(referralsData);
+          }
+          
+          // Update available months
+          const months = referralsData.map(referral => {
+            const date = new Date(referral.createdAt);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          });
+          
+          const uniqueMonths = [...new Set([...months, ...availableMonths])];
+          uniqueMonths.sort((a, b) => b.localeCompare(a)); // Sort descending
+          
+          // Add current month if not already in the list
+          const currentMonth = getCurrentMonth();
+          if (!uniqueMonths.includes(currentMonth)) {
+            uniqueMonths.unshift(currentMonth);
+          }
+          
+          setAvailableMonths(uniqueMonths);
+        },
+        (err) => {
+          console.error('Error subscribing to referrals:', err);
+          setError('Failed to subscribe to referrals');
+        }
+      );
     } catch (err) {
       console.error('Error setting up admin subscriptions:', err);
       setError('Failed to set up real-time updates');
@@ -164,6 +296,7 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
       if (unsubscribeAffiliates) unsubscribeAffiliates();
       if (unsubscribeCommissions) unsubscribeCommissions();
       if (unsubscribePayouts) unsubscribePayouts();
+      if (unsubscribeReferrals) unsubscribeReferrals();
     };
   }, [user]);
 
@@ -240,10 +373,14 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
       value={{
         affiliates,
         settings,
+        referrals,
         payouts,
         commissions,
         loading,
         error,
+        selectedMonth,
+        setSelectedMonth,
+        availableMonths,
         updateSettings: updateSettingsFn,
         processPayout: processPayoutFn,
         approveCommission: approveCommissionFn,
