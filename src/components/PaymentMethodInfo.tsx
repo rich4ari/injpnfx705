@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { CreditCard, RefreshCw, QrCode, Info, ArrowRight } from 'lucide-react';
@@ -11,6 +12,7 @@ interface PaymentMethodInfoProps {
 
 const PaymentMethodInfo = ({ paymentMethod, totalAmount }: PaymentMethodInfoProps) => {
   const { convertedRupiah, isLoading, error, refreshRate, lastUpdated } = useCurrencyConverter(totalAmount, paymentMethod);
+  const { t } = useLanguage();
   const [showRefreshAnimation, setShowRefreshAnimation] = useState(false);
 
   const handleRefreshRate = () => {

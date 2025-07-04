@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/hooks/useLanguage';
 import { ProductVariant } from '@/types';
 
 interface ProductVariantDisplayProps {
@@ -14,6 +15,8 @@ const ProductVariantDisplay = ({
   onVariantSelect, 
   showPrice = true 
 }: ProductVariantDisplayProps) => {
+  const { t } = useLanguage();
+  
   // Only show variants that actually exist for this product
   if (!variants || variants.length === 0) {
     return null;

@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input';
 import { useAffiliate } from '@/hooks/useAffiliate';
 import { Copy, Share2, QrCode } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
 import QRCode from 'qrcode.react';
 
 const ReferralLinkCard = () => {
   const { affiliate, referralLink, copyReferralLink } = useAffiliate();
+  const { t } = useLanguage();
   const [showQR, setShowQR] = useState(false);
 
   const handleCopyLink = () => {

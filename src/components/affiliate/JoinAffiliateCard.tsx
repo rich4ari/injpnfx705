@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { useAffiliate } from '@/hooks/useAffiliate';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
 import { DollarSign, Check, AlertCircle } from 'lucide-react';
 
 const JoinAffiliateCard = () => {
   const { joinAffiliate, loading, settings } = useAffiliate();
+  const { t } = useLanguage();
   const [isJoining, setIsJoining] = useState(false);
 
   const handleJoin = async () => {

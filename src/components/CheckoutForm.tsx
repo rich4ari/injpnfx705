@@ -15,6 +15,7 @@ import { useCreateOrder } from '@/hooks/useOrders';
 import { useAuth } from '@/hooks/useFirebaseAuth';
 import { useShippingRateByPrefecture } from '@/hooks/useShippingRates';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
+import { useLanguage } from '@/hooks/useLanguage';
 import PaymentMethodInfo from '@/components/PaymentMethodInfo';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '@/config/firebase';
@@ -41,6 +42,7 @@ interface CheckoutFormProps {
 
 const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t } = useLanguage();
   const { user } = useAuth();
   const createOrder = useCreateOrder();
   const [selectedPrefecture, setSelectedPrefecture] = useState<string>('');

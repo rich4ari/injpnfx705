@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 import { useState } from 'react';
 
 interface OrderPaymentStatusProps {
@@ -14,6 +15,7 @@ const OrderPaymentStatus = ({
   paymentProofUrl, 
   onViewProof 
 }: OrderPaymentStatusProps) => {
+  const { t } = useLanguage();
   const [showProof, setShowProof] = useState(false);
 
   const handleViewProof = () => {

@@ -1,5 +1,6 @@
 import { useUserOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/hooks/useFirebaseAuth';
+import { useLanguage } from '@/hooks/useLanguage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import InvoiceModal from '@/components/InvoiceModal';
@@ -17,6 +18,7 @@ import PaymentProofUploader from '@/components/PaymentProofUploader';
 
 const Orders = () => {
   const { user, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const { data: orders, isLoading, error } = useUserOrders(user?.uid || '');
   const [showInvoice, setShowInvoice] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);

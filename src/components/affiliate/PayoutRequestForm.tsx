@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
 import { DollarSign, CreditCard, AlertCircle } from 'lucide-react';
 
 const payoutSchema = z.object({
@@ -31,6 +32,7 @@ type PayoutFormValues = z.infer<typeof payoutSchema>;
 
 const PayoutRequestForm = () => {
   const { affiliate, settings, requestPayout } = useAffiliate();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<PayoutFormValues>({

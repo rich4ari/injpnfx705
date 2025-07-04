@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useFirebaseAuth';
 import { AffiliateProvider, useAffiliate } from '@/hooks/useAffiliate';
+import { useLanguage } from '@/hooks/useLanguage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AffiliateStats from '@/components/affiliate/AffiliateStats';
@@ -16,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ReferralContent = () => {
   const { affiliate, loading } = useAffiliate();
+  const { t } = useLanguage();
 
   // Enhanced scroll to top when component mounts
   useEffect(() => {
