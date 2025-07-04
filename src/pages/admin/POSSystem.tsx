@@ -100,6 +100,22 @@ const POSSystem = () => {
   const [currentReceipt, setCurrentReceipt] = useState<POSTransaction | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
 
+  // Helper function to remove undefined values from objects and arrays
+  const removeUndefined = (obj: any): any => {
+    if (Array.isArray(obj)) {
+      return obj.map(removeUndefined).filter(item => item !== undefined);
+    } else if (obj !== null && typeof obj === 'object') {
+      const cleaned: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        if (value !== undefined) {
+          cleaned[key] = removeUndefined(value);
+        }
+      }
+      return cleaned;
+    }
+    return obj;
+  };
+
   // Get unique categories from products
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
 
@@ -327,8 +343,8 @@ const POSSystem = () => {
         const posTransactionsRef = collection(db, 'pos_transactions');
         const newDocRef = doc(posTransactionsRef);
         
-        // Then set the document data using the transaction object
-        transaction.set(newDocRef, {
+        // Prepare transaction data and remove undefined values
+        const transactionDataToStore = {
           items: transaction.items,
           totalAmount: transaction.totalAmount,
           paymentMethod: transaction.paymentMethod,
@@ -338,7 +354,13 @@ const POSSystem = () => {
           cashierName: transaction.cashierName,
           ...(transaction.cashReceived && { cashReceived: transaction.cashReceived }),
           ...(transaction.change && { change: transaction.change })
-        });
+        };
+        
+        // Clean the data to remove any undefined values
+        const cleanedTransactionData = removeUndefined(transactionDataToStore);
+        
+        // Then set the document data using the cleaned transaction object
+        transaction.set(newDocRef, cleanedTransactionData);
       });
 
       // Show success message
