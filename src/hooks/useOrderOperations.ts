@@ -208,8 +208,8 @@ export const useOrderOperations = () => {
   });
 
   return {
-    confirmOrder: confirmOrderMutation.mutate,
-    cancelOrder: cancelOrderMutation.mutate,
+    confirmOrder: confirmOrderMutation.mutateAsync,
+    cancelOrder: cancelOrderMutation.mutateAsync,
     isLoading: confirmOrderMutation.isPending || cancelOrderMutation.isPending
   };
 };
