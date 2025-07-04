@@ -54,36 +54,37 @@ const PaymentMethodInfo = ({ paymentMethod, totalAmount }: PaymentMethodInfoProp
                       onClick={handleRefreshRate}
                       className="ml-2 text-blue-500 hover:text-blue-700"
                       title="Refresh kurs"
-                <div className="bg-white p-4 rounded-lg shadow-sm relative">
                     >
-                    src="/lovable-uploads/qris-injapan-food.jpg" 
+                      <RefreshCw className={`w-4 h-4 ${showRefreshAnimation ? 'animate-spin' : ''}`} />
                     </button>
                   </div>
                 </div>
                 
                 {error ? (
                   <p className="text-xs text-yellow-600 mt-2">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-blue-600">Mengkonversi mata uang...</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      <p className="font-bold text-blue-700 text-lg">
-                        ¥{totalAmount.toLocaleString()} / Rp {convertedRupiah?.toLocaleString('id-ID') || '-'}
-                      </p>
-                      {lastUpdated && (
-                        <p className="text-xs text-blue-500 flex items-center justify-center">
-                          <Info className="w-3 h-3 mr-1" />
-                          Kurs otomatis, update per {lastUpdated}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  <p className="text-xs text-blue-600 mt-1">
-                    *Kurs otomatis berdasarkan nilai tukar saat ini.
+                    {error}
                   </p>
+                ) : (
+                  <div className="mt-2">
+                    {isLoading ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-blue-600">Mengkonversi mata uang...</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <p className="font-bold text-blue-700 text-lg">
+                          ¥{totalAmount.toLocaleString()} / Rp {convertedRupiah?.toLocaleString('id-ID') || '-'}
+                        </p>
+                        {lastUpdated && (
+                          <p className="text-xs text-blue-500 flex items-center justify-center">
+                            <Info className="w-3 h-3 mr-1" />
+                            Kurs otomatis, update per {lastUpdated}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
                 
                 <div className="mt-3 text-sm text-blue-600">
