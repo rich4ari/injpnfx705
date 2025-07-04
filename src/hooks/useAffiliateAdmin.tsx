@@ -16,7 +16,7 @@ import {
   AffiliatePayout,
   AffiliateCommission
 } from '@/types/affiliate';
-import { collection, query, onSnapshot, where } from 'firebase/firestore';
+import { collection, query, onSnapshot, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
 interface AffiliateAdminContextType {
@@ -165,6 +165,7 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
     let unsubscribeAffiliates: (() => void) | undefined;
     let unsubscribeCommissions: (() => void) | undefined;
     let unsubscribePayouts: (() => void) | undefined;
+    let unsubscribeReferrals: (() => void) | undefined;
 
     try {
       // Subscribe to affiliates
