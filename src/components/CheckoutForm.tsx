@@ -52,6 +52,9 @@ const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
   const [visitorId, setVisitorId] = useState<string | null>(null);
 
+  // State to track if currency info tooltip should be shown
+  const [showCurrencyInfo, setShowCurrencyInfo] = useState(false);
+
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {

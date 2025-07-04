@@ -12,6 +12,7 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
   const [error, setError] = useState<string | null>(null);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Use a ref to track if we're already fetching to prevent multiple simultaneous requests
   const isFetchingRef = useRef(false);
@@ -22,12 +23,12 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
       const cachedData = localStorage.getItem('exchange_rate_cache');
       if (cachedData) {
         const { rate, timestamp, lastUpdated } = JSON.parse(cachedData);
+        setLastUpdated(lastUpdated);
         const now = Date.now();
         const ONE_HOUR = 60 * 60 * 1000; // 1 hour in milliseconds
         
         // Return cached rate if it's less than 1 hour old
         if (now - timestamp < ONE_HOUR) {
-          setLastUpdated(lastUpdated);
           return rate;
         }
       }
@@ -59,6 +60,7 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
   };
 
   const fetchExchangeRate = async () => {
+    setIsRefreshing(true);
     // Prevent multiple simultaneous fetches
     if (isFetchingRef.current) return;
     
@@ -133,6 +135,7 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
     } finally {
       setIsLoading(false);
       isFetchingRef.current = false;
+      setIsRefreshing(false);
     }
   };
 
@@ -171,6 +174,7 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
     convertedRupiah, 
     isLoading, 
     error,
+    isRefreshing,
     lastUpdated,
     refreshRate: fetchExchangeRate 
   };

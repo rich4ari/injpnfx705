@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { CreditCard, RefreshCw, QrCode, Info } from 'lucide-react';
+import { CreditCard, RefreshCw, QrCode, Info, ArrowRight } from 'lucide-react';
 
 interface PaymentMethodInfoProps {
   paymentMethod: string;
@@ -122,29 +122,44 @@ const PaymentMethodInfo = ({ paymentMethod, totalAmount }: PaymentMethodInfoProp
                 <div className="flex flex-col items-center space-y-3">
                   <p className="font-medium text-blue-700">Scan QR Code untuk Pembayaran</p>
                   
+                  {/* Display both currencies prominently */}
+                  <div className="bg-blue-100 p-3 rounded-lg w-full text-center">
+                    <p className="font-bold text-blue-800 text-lg">
+                      {isLoading ? (
+                        <span className="flex items-center justify-center">
+                          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Mengkonversi...
+                        </span>
+                      ) : (
+                        <>¥{totalAmount.toLocaleString()} / Rp{convertedRupiah?.toLocaleString('id-ID') || '-'}</>
+                      )}
+                    </p>
+                    {lastUpdated && !isLoading && (
+                      <p className="text-xs text-blue-600 mt-1 flex items-center justify-center">
+                        <Info className="w-3 h-3 mr-1" />
+                        Kurs otomatis, update per {lastUpdated}
+                      </p>
+                    )}
+                  </div>
+                  
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <img 
-                      src="/lovable-uploads/aiease_1751319905737 (1).jpg" 
+                      src="/lovable-uploads/qris-injapan-food.jpg" 
                       alt="QRIS Payment QR Code" 
                       className="w-[200px] h-auto"
                     />
                   </div>
                   
-                  <div className="text-center">
-                    <p className="font-bold text-blue-700 text-lg">
-                      ¥{totalAmount.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-blue-600 mt-1">
-                      Scan dengan aplikasi e-wallet atau mobile banking Anda
-                    </p>
-                  </div>
+                  <p className="text-sm text-blue-700 font-medium">
+                    Scan dengan aplikasi e-wallet atau mobile banking Anda
+                  </p>
                 </div>
                 
                 <div className="mt-4 text-sm text-blue-600">
                   <p className="font-medium">Petunjuk Pembayaran:</p>
                   <ol className="list-decimal pl-5 space-y-1">
                     <li>Scan QR code di atas dengan aplikasi e-wallet atau mobile banking Anda</li>
-                    <li>Masukkan jumlah pembayaran sesuai total belanja (¥{totalAmount.toLocaleString()} / Rp {convertedRupiah?.toLocaleString('id-ID') || '-'})</li>
+                    <li>Masukkan jumlah pembayaran sesuai total belanja <strong>(¥{totalAmount.toLocaleString()} / Rp{convertedRupiah?.toLocaleString('id-ID') || '-'})</strong></li>
                     <li>Selesaikan pembayaran dan simpan bukti pembayaran</li>
                     <li>Upload bukti pembayaran pada form di bawah</li>
                   </ol>
