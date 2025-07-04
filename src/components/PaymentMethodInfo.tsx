@@ -143,9 +143,9 @@ const PaymentMethodInfo = ({ paymentMethod, totalAmount }: PaymentMethodInfoProp
                   </div>
                   
                   <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <img 
-                      src="/lovable-uploads/qris-injapan-food.jpg" 
-                      alt="QRIS Payment QR Code" 
+                    <img
+                      src="/lovable-uploads/aiease_1751319905737 (1) copy.jpg"
+                      alt="QRIS Payment QR Code"
                       className="w-[200px] h-auto"
                     />
                   </div>
