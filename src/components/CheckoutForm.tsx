@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useFirebaseAuth';
 import { useShippingRateByPrefecture } from '@/hooks/useShippingRates';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { useLanguage } from '@/hooks/useLanguage';
-import PaymentMethodInfo from '@/components/PaymentMethodInfo';
+import PaymentMethodInfo from '@/components/PaymentMethodInfo'; 
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '@/config/firebase';
 
@@ -109,25 +109,32 @@ const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
   const generateWhatsAppMessage = (data: CheckoutFormData, convertedRupiahValue?: number) => {
     const productList = cart.map(item => {
       const variants = item.selectedVariants 
-        ? Object.entries(item.selectedVariants).map(([type, value]) => `${type}: ${value}`).join(', ')
+        ? Object.entries(item.selectedVariants).map(([type, value]) => `${type}: ${value}`).join(', ') 
         : '';
       
-      return `- ${item.name}${variants ? ` | Varian: ${variants}` : ''} | Qty: ${item.quantity} | ¥${(item.price * item.quantity).toLocaleString()}`;
+      // Format price based on payment method
+      let priceDisplay = `¥${(item.price * item.quantity).toLocaleString()}`;
+      
+      // Add Rupiah conversion if applicable
+      if (convertedRupiahValue && (data.paymentMethod === 'Bank Transfer (Rupiah)' || data.paymentMethod === 'QRIS / QR Code')) {
+        const itemRupiah = Math.round((item.price * item.quantity) * (convertedRupiahValue / totalWithShipping));
+        priceDisplay = `Rp${itemRupiah.toLocaleString('id-ID')}`;
+      }
+      
+      return `- ${item.name}${variants ? ` | Varian: ${variants}` : ''} | Qty: ${item.quantity} | ${priceDisplay}`;
     }).join('\n');
 
     const shippingInfo = shippingFee 
-      ? `\n*ONGKOS KIRIM: ¥${shippingFee.toLocaleString()}*` 
-      : '';
-
-    // Add Rupiah conversion if applicable
-    const rupiahInfo = convertedRupiahValue && data.paymentMethod === 'Bank Transfer (Rupiah)'
-      ? `\n*TOTAL DALAM RUPIAH: Rp${convertedRupiahValue.toLocaleString('id-ID')}*`
+      ? `\n*ONGKOS KIRIM:* ${formatCurrencyByMethod(shippingFee, data.paymentMethod, convertedRupiahValue)}` 
       : '';
 
     // Add affiliate info if available
     const affiliateInfo = affiliateId 
       ? `\n*KODE REFERRAL: ${affiliateId}*`
       : '';
+
+    // Format total based on payment method
+    const totalDisplay = formatCurrencyByMethod(totalWithShipping, data.paymentMethod, convertedRupiahValue);
 
     const message = `Halo Admin Injapan Food
 
@@ -148,8 +155,8 @@ ${data.paymentMethod}
 *DAFTAR PRODUK:*
 ${productList}
 
-*SUBTOTAL BELANJA: ¥${total.toLocaleString()}*${shippingInfo}
-*TOTAL BELANJA: ¥${totalWithShipping.toLocaleString()}*${rupiahInfo}${affiliateInfo}
+*SUBTOTAL BELANJA:* ${formatCurrencyByMethod(total, data.paymentMethod, convertedRupiahValue)}${shippingInfo}
+*TOTAL BELANJA:* ${totalDisplay}${affiliateInfo}
 
 ${data.notes ? `Catatan: ${data.notes}` : ''}
 
@@ -158,6 +165,18 @@ ${paymentProofFile ? 'Saya sudah mengupload bukti pembayaran melalui website.' :
 Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
 
     return encodeURIComponent(message);
+  };
+
+  // Helper function to format currency based on payment method
+  const formatCurrencyByMethod = (amount: number, method: string, convertedRupiah?: number): string => {
+    if ((method === 'Bank Transfer (Rupiah)' || method === 'QRIS / QR Code') && convertedRupiah) {
+      // For Rupiah methods, calculate the proportional amount
+      const amountInRupiah = Math.round((amount / totalWithShipping) * convertedRupiah);
+      return `Rp${amountInRupiah.toLocaleString('id-ID')}`;
+    }
+    
+    // For Yen methods or when conversion is not available
+    return `¥${amount.toLocaleString()}`;
   };
 
   const handlePaymentProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
