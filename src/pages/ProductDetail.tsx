@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProduct, useProducts } from '@/hooks/useProducts';
 import { formatPrice } from '@/utils/cart';
+import { useLanguage } from '@/hooks/useLanguage';
 import { useCartAnimation } from '@/hooks/useCartAnimation';
 import { ShoppingCart, Truck, Check } from 'lucide-react';
 import Header from '@/components/Header';
@@ -16,6 +17,7 @@ import { getCategoryIcon } from '@/utils/categoryVariants';
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const { t } = useLanguage();
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const quantityRef = useRef<HTMLDivElement>(null);
