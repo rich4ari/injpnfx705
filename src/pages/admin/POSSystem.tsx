@@ -323,8 +323,22 @@ const POSSystem = () => {
         }
         
         // Create transaction record
-        const transactionRef = collection(db, 'pos_transactions');
-        transaction.set(doc(transactionRef), transaction);
+        // We need to create a document reference first
+        const posTransactionsRef = collection(db, 'pos_transactions');
+        const newDocRef = doc(posTransactionsRef);
+        
+        // Then set the document data using the transaction object
+        transaction.set(newDocRef, {
+          items: transaction.items,
+          totalAmount: transaction.totalAmount,
+          paymentMethod: transaction.paymentMethod,
+          status: transaction.status,
+          createdAt: transaction.createdAt,
+          cashierId: transaction.cashierId,
+          cashierName: transaction.cashierName,
+          ...(transaction.cashReceived && { cashReceived: transaction.cashReceived }),
+          ...(transaction.change && { change: transaction.change })
+        });
       });
 
       // Show success message
@@ -336,7 +350,7 @@ const POSSystem = () => {
       // Show receipt
       setCurrentReceipt({
         ...transaction as POSTransaction,
-        id: `POS-${Date.now()}`
+        id: Date.now().toString()
       });
       setShowReceipt(true);
 
