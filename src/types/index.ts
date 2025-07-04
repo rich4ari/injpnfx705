@@ -34,6 +34,7 @@ export interface Order {
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'confirmed' | 'completed';
   payment_status?: 'pending' | 'verified' | 'rejected';
   payment_proof_url?: string;
+  confirmed_at?: string;
   shipping_address: ShippingAddress;
   payment_method: 'credit_card' | 'paypal' | 'cod' | 'qris';
   created_at: string;
@@ -52,6 +53,7 @@ export interface OrderItem {
   price: number;
   name: string;
   image_url?: string;
+  selectedVariantName?: string;
   selectedVariants?: Record<string, any>;
 }
 

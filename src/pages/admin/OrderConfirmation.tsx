@@ -5,7 +5,7 @@ import OrderConfirmation from '@/components/admin/OrderConfirmation';
 import InvoiceModal from '@/components/InvoiceModal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Clock, FileText, RefreshCw } from 'lucide-react';
+import { AlertCircle, Clock, FileText, RefreshCw, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Order } from '@/types';
 import ErrorState from '@/components/ErrorState';
@@ -16,6 +16,7 @@ const OrderConfirmationPage = () => {
   const { data: pendingOrders = [], isLoading, error } = usePendingOrders();
   const [showInvoice, setShowInvoice] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [confirmingOrders, setConfirmingOrders] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
   // Add manual refresh function instead of relying on automatic refetching
@@ -26,6 +27,15 @@ const OrderConfirmationPage = () => {
   const handleShowInvoice = (order: Order) => {
     setSelectedOrder(order);
     setShowInvoice(true);
+  };
+
+  // Show success notification when stock is updated
+  const showStockUpdateSuccess = () => {
+    toast({
+      title: "Stok Berhasil Diperbarui",
+      description: "Stok produk telah dikurangi sesuai dengan pesanan yang dikonfirmasi",
+      variant: "default"
+    });
   };
 
   if (isLoading) {
@@ -87,7 +97,7 @@ const OrderConfirmationPage = () => {
           <div className="space-y-6">
             {pendingOrders.some(order => order.referralTransaction) && (
               <Card className="bg-yellow-50 border-yellow-200">
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <CardTitle className="flex items-center text-yellow-800">
                     <AlertCircle className="w-5 h-5 mr-2" />
                     Perhatian Referral
@@ -101,10 +111,32 @@ const OrderConfirmationPage = () => {
                 </CardContent>
               </Card>
             )}
+            
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center text-blue-800">
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  Informasi Stok Produk
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-blue-700 text-sm">
+                  <strong>Penting:</strong> Saat Anda mengkonfirmasi pesanan, sistem akan secara otomatis mengurangi stok produk sesuai dengan jumlah yang dipesan.
+                  Pastikan stok tersedia sebelum mengkonfirmasi pesanan.
+                </p>
+              </CardContent>
+            </Card>
 
             {pendingOrders.map((order) => (
               <div key={order.id} className="space-y-4">
-                <OrderConfirmation order={order} />
+                <OrderConfirmation 
+                  order={order} 
+                  onConfirmSuccess={() => {
+                    showStockUpdateSuccess();
+                    // Add to confirming orders set to prevent double confirmation
+                    setConfirmingOrders(prev => new Set(prev).add(order.id));
+                  }}
+                />
                 <div className="flex justify-end">
                   <Button
                     onClick={() => handleShowInvoice(order)}

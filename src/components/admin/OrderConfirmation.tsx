@@ -7,17 +7,29 @@ import { Order } from '@/types';
 import { useOrderOperations } from '@/hooks/useOrderOperations';
 import { CheckCircle, XCircle, Clock, User, Mail, Phone, MapPin, Package, FileText } from 'lucide-react';
 import InvoiceModal from '@/components/InvoiceModal';
+import { useState } from 'react';
 
 interface OrderConfirmationProps {
   order: Order;
+  onConfirmSuccess?: () => void;
 }
 
-const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
+const OrderConfirmation = ({ order, onConfirmSuccess }: OrderConfirmationProps) => {
   const { confirmOrder, cancelOrder, isLoading } = useOrderOperations();
   const [showInvoice, setShowInvoice] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const handleConfirm = () => {
-    confirmOrder(order.id);
+    setIsConfirming(true);
+    confirmOrder(order.id).then(() => {
+      if (onConfirmSuccess) {
+        onConfirmSuccess();
+      }
+    }).catch(error => {
+      console.error('Error confirming order:', error);
+    }).finally(() => {
+      setIsConfirming(false);
+    });
   };
 
   const handleCancel = () => {
@@ -151,11 +163,11 @@ const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
               <>
                 <Button
                   onClick={handleConfirm}
-                  disabled={isLoading}
+                  disabled={isLoading || isConfirming}
                   className="flex-1 bg-green-600 hover:bg-green-700"
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  {isLoading ? 'Processing...' : 'Konfirmasi Pesanan'}
+                  {isLoading || isConfirming ? 'Processing...' : 'Konfirmasi Pesanan'}
                 </Button>
                 <Button
                   onClick={handleCancel}

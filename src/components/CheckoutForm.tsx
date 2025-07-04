@@ -252,6 +252,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
       const orderData = {
         items: cart.map(item => ({
           name: item.name,
+          product_id: item.product?.id || item.id.split('-')[0], // Store the product ID for stock updates
           price: item.price,
           quantity: item.quantity,
           image_url: item.image_url,

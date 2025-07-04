@@ -50,7 +50,8 @@ export const addToCart = (product: Product, quantity: number = 1): CartItem[] =>
         stock: product.stock
       },
       selectedVariants: product.selectedVariants || {},
-      selectedVariantName: product.selectedVariantName || null
+      selectedVariantName: product.selectedVariantName || null,
+      product_id: product.id // Add product_id for stock updates
     };
     
     cart.push(cartItem);
