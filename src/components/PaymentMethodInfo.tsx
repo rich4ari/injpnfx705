@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { CreditCard, RefreshCw, QrCode } from 'lucide-react';
+import { CreditCard, RefreshCw, QrCode, Info } from 'lucide-react';
 
 interface PaymentMethodInfoProps {
   paymentMethod: string;
@@ -10,7 +10,7 @@ interface PaymentMethodInfoProps {
 }
 
 const PaymentMethodInfo = ({ paymentMethod, totalAmount }: PaymentMethodInfoProps) => {
-  const { convertedRupiah, isLoading, error, refreshRate } = useCurrencyConverter(totalAmount, paymentMethod);
+  const { convertedRupiah, isLoading, error, refreshRate, lastUpdated } = useCurrencyConverter(totalAmount, paymentMethod);
   const [showRefreshAnimation, setShowRefreshAnimation] = useState(false);
 
   const handleRefreshRate = () => {
@@ -54,18 +54,33 @@ const PaymentMethodInfo = ({ paymentMethod, totalAmount }: PaymentMethodInfoProp
                       onClick={handleRefreshRate}
                       className="ml-2 text-blue-500 hover:text-blue-700"
                       title="Refresh kurs"
-                      type="button"
+                <div className="bg-white p-4 rounded-lg shadow-sm relative">
                     >
-                      <RefreshCw className={`w-4 h-4 ${showRefreshAnimation ? 'animate-spin' : ''}`} />
+                    src="/lovable-uploads/qris-injapan-food.jpg" 
                     </button>
                   </div>
                 </div>
                 
                 {error ? (
                   <p className="text-xs text-yellow-600 mt-2">
-                    Gagal mendapatkan kurs terbaru. Menggunakan kurs perkiraan.
-                  </p>
-                ) : (
+                  {isLoading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-blue-600">Mengkonversi mata uang...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <p className="font-bold text-blue-700 text-lg">
+                        ¥{totalAmount.toLocaleString()} / Rp {convertedRupiah?.toLocaleString('id-ID') || '-'}
+                      </p>
+                      {lastUpdated && (
+                        <p className="text-xs text-blue-500 flex items-center justify-center">
+                          <Info className="w-3 h-3 mr-1" />
+                          Kurs otomatis, update per {lastUpdated}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <p className="text-xs text-blue-600 mt-1">
                     *Kurs otomatis berdasarkan nilai tukar saat ini.
                   </p>
@@ -127,12 +142,21 @@ const PaymentMethodInfo = ({ paymentMethod, totalAmount }: PaymentMethodInfoProp
                 <div className="mt-4 text-sm text-blue-600">
                   <p className="font-medium">Petunjuk Pembayaran:</p>
                   <ol className="list-decimal pl-5 space-y-1">
-                    <li>Scan QR code di atas dengan aplikasi pembayaran Anda</li>
-                    <li>Masukkan jumlah pembayaran sesuai total belanja</li>
+                    <li>Scan QR code di atas dengan aplikasi e-wallet atau mobile banking Anda</li>
+                    <li>Masukkan jumlah pembayaran sesuai total belanja (¥{totalAmount.toLocaleString()} / Rp {convertedRupiah?.toLocaleString('id-ID') || '-'})</li>
                     <li>Selesaikan pembayaran dan simpan bukti pembayaran</li>
                     <li>Upload bukti pembayaran pada form di bawah</li>
                   </ol>
                 </div>
+                
+                {error && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md text-xs text-yellow-700">
+                    <p className="flex items-center">
+                      <Info className="w-3 h-3 mr-1 flex-shrink-0" />
+                      Konversi mata uang menggunakan kurs perkiraan. Silakan konfirmasi kurs terbaru.
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           )}

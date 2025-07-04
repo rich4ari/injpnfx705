@@ -48,6 +48,7 @@ const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
   const [shippingFee, setShippingFee] = useState<number | null>(null);
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
+  const [showCurrencyInfo, setShowCurrencyInfo] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
   const [visitorId, setVisitorId] = useState<string | null>(null);
 
@@ -73,7 +74,7 @@ const CheckoutForm = ({ cart, total, onOrderComplete }: CheckoutFormProps) => {
   const totalWithShipping = total + (shippingFee || 0);
 
   // Move the currency converter hook to the top level
-  const { convertedRupiah } = useCurrencyConverter(totalWithShipping, paymentMethod);
+  const { convertedRupiah, lastUpdated } = useCurrencyConverter(totalWithShipping, paymentMethod);
 
   // Update shipping fee when prefecture changes
   useEffect(() => {
@@ -475,7 +476,7 @@ Mohon konfirmasi pesanan saya. Terima kasih banyak!`;
                     <SelectItem value="COD (Cash on Delivery)">COD (Cash on Delivery)</SelectItem>
                     <SelectItem value="Bank Transfer (Rupiah)">Bank Transfer (Rupiah)</SelectItem>
                     <SelectItem value="Bank Transfer (Yucho / ゆうちょ銀行)">Bank Transfer (Yucho / ゆうちょ銀行)</SelectItem>
-                    <SelectItem value="QRIS / QR Code">QRIS / QR Code</SelectItem>
+                    <SelectItem value="QRIS / QR Code">QRIS / QR Code (IDR)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

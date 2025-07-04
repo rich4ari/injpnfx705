@@ -11,6 +11,7 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   
   // Use a ref to track if we're already fetching to prevent multiple simultaneous requests
   const isFetchingRef = useRef(false);
@@ -20,12 +21,13 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
     try {
       const cachedData = localStorage.getItem('exchange_rate_cache');
       if (cachedData) {
-        const { rate, timestamp } = JSON.parse(cachedData);
+        const { rate, timestamp, lastUpdated } = JSON.parse(cachedData);
         const now = Date.now();
         const ONE_HOUR = 60 * 60 * 1000; // 1 hour in milliseconds
         
         // Return cached rate if it's less than 1 hour old
         if (now - timestamp < ONE_HOUR) {
+          setLastUpdated(lastUpdated);
           return rate;
         }
       }
@@ -37,10 +39,20 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
   
   const setCachedRate = (rate: number) => {
     try {
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      
       localStorage.setItem('exchange_rate_cache', JSON.stringify({
         rate,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        lastUpdated: formattedDate
       }));
+      
+      setLastUpdated(formattedDate);
     } catch (e) {
       console.warn('Error caching exchange rate:', e);
     }
@@ -74,7 +86,7 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
       if (data.rates && data.rates.IDR) {
         const rate = data.rates.IDR;
         setExchangeRate(rate);
-        setCachedRate(rate);
+        setCachedRate(rate); // This will also set lastUpdated
         const rupiah = yenAmount * rate;
         setConvertedRupiah(Math.round(rupiah));
       } else {
@@ -102,7 +114,7 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
         if (backupData.rates && backupData.rates.IDR) {
           const backupRate = backupData.rates.IDR;
           setExchangeRate(backupRate);
-          setCachedRate(backupRate);
+          setCachedRate(backupRate); // This will also set lastUpdated
           const rupiah = yenAmount * backupRate;
           setConvertedRupiah(Math.round(rupiah));
         } else {
@@ -127,7 +139,7 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
   // Initial load effect - only runs when payment method changes to Rupiah
   useEffect(() => {
     // Only fetch exchange rate if payment method is bank transfer in Rupiah
-    if (paymentMethod === 'Bank Transfer (Rupiah)') {
+    if (paymentMethod === 'Bank Transfer (Rupiah)' || paymentMethod === 'QRIS / QR Code') {
       // Try to get cached rate first
       const cachedRate = getCachedRate();
       
@@ -150,7 +162,7 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
 
   // Recalculation effect - only runs when yenAmount changes and we already have a rate
   useEffect(() => {
-    if (exchangeRate && paymentMethod === 'Bank Transfer (Rupiah)') {
+    if (exchangeRate && (paymentMethod === 'Bank Transfer (Rupiah)' || paymentMethod === 'QRIS / QR Code')) {
       setConvertedRupiah(Math.round(yenAmount * exchangeRate));
     }
   }, [yenAmount, exchangeRate, paymentMethod]);
@@ -159,6 +171,7 @@ export const useCurrencyConverter = (yenAmount: number, paymentMethod: string) =
     convertedRupiah, 
     isLoading, 
     error,
+    lastUpdated,
     refreshRate: fetchExchangeRate 
   };
 };
