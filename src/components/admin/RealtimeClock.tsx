@@ -28,7 +28,7 @@ const RealtimeClock = ({
 
   // Format date as "DD Month YYYY"
   const formattedDate = currentTime.toLocaleDateString('id-ID', {
-    day: '2-digit',
+    day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
@@ -47,13 +47,13 @@ const RealtimeClock = ({
   return (
     <div className={`flex items-center text-gray-700 ${className}`}>
       {showIcon && <Clock className="w-4 h-4 mr-2" />}
-      <div className="flex flex-col sm:flex-row sm:items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center text-right">
         {showDate && (
-          <span className="text-sm sm:mr-2">{formattedDate}</span>
+          <span className="text-sm font-medium sm:mr-2">{formattedDate}</span>
         )}
         <div className="flex items-center">
-          <span className="font-medium">{formattedTime}</span>
-          <span className="ml-1 text-xs text-gray-500">{timezone}</span>
+          <span className="font-bold text-primary">{formattedTime}</span>
+          <span className="ml-1 text-xs font-medium text-gray-500">{timezone}</span>
         </div>
       </div>
     </div>

@@ -101,7 +101,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
       <div className="flex-1 overflow-auto">
-        <div className="flex justify-end p-4">
+        <div className="flex justify-end p-4 bg-white shadow-sm">
           <RealtimeClock showIcon={true} showDate={true} showSeconds={true} />
         </div>
         {children}

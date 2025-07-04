@@ -28,6 +28,18 @@ export const usePOSTransactions = (date?: string) => {
       // Create query - using simple query to avoid index requirements
       const transactionsRef = collection(db, 'pos_transactions');
       const q = query(transactionsRef);
+
+      // First check if collection exists and has documents
+      getDocs(q).then(initialSnapshot => {
+        if (initialSnapshot.empty) {
+          console.log('No POS transactions found in initial check');
+          setTransactions([]);
+          setLoading(false);
+        }
+      }).catch(err => {
+        console.error('Error in initial POS transactions check:', err);
+        // Don't set error here, let the snapshot listener handle it
+      });
       
       // Set up real-time listener
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -41,15 +53,19 @@ export const usePOSTransactions = (date?: string) => {
           
           let transactionData: POSTransaction[] = [];
           snapshot.forEach((doc) => {
-            const data = doc.data();
-            // Ensure all required fields exist
-            if (data && data.createdAt && data.items && data.totalAmount) {
-              transactionData.push({ 
-                id: doc.id, 
-                ...data 
-              } as POSTransaction);
-            } else {
-              console.warn(`Skipping transaction ${doc.id} due to missing required fields`);
+            try {
+              const data = doc.data();
+              // Ensure all required fields exist
+              if (data && data.createdAt && data.items && data.totalAmount) {
+                transactionData.push({ 
+                  id: doc.id, 
+                  ...data 
+                } as POSTransaction);
+              } else {
+                console.warn(`Skipping transaction ${doc.id} due to missing required fields`);
+              }
+            } catch (docError) {
+              console.error(`Error processing transaction document ${doc.id}:`, docError);
             }
           });
           
@@ -72,19 +88,19 @@ export const usePOSTransactions = (date?: string) => {
           setLoading(false);
         } catch (err) {
           console.error('Error processing transaction data:', err);
-          setError(err as Error);
+          setError(new Error(`Failed to process transaction data: ${err.message || 'Unknown error'}`));
           setLoading(false);
         }
       }, (err) => {
         console.error('Error in POS transactions snapshot:', err);
-        setError(err as Error);
+        setError(new Error(`Failed to listen to transactions: ${err.message || 'Unknown error'}`));
         setLoading(false);
       });
       
       return () => unsubscribe();
     } catch (err) {
       console.error('Error setting up POS transactions listener:', err);
-      setError(err as Error);
+      setError(new Error(`Failed to set up transaction listener: ${err.message || 'Unknown error'}`));
       setLoading(false);
       return () => {};
     }

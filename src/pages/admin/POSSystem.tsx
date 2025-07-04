@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useFirebaseAuth';
 import { useProducts } from '@/hooks/useProducts';
-import { collection, addDoc, runTransaction, doc, onSnapshot, query, setDoc } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import RealtimeClock from '@/components/admin/RealtimeClock';
 import { db } from '@/config/firebase';
 import { toast } from '@/hooks/use-toast';
@@ -47,20 +47,17 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Search, 
   ShoppingCart, 
-  Plus, 
+  Plus,
   Minus, 
   Trash2, 
   CreditCard, 
-  Clock, 
-  Calendar, 
-  Filter, 
+  Calendar,
   CheckCircle, 
-  XCircle, 
   RefreshCw,
-  DollarSign,
   Receipt,
   Printer,
-  AlertOctagon
+  AlertOctagon,
+  Download
 } from 'lucide-react';
 
 // Cart item interface
@@ -86,7 +83,8 @@ const POSSystem = () => {
   const [isTransactionComplete, setIsTransactionComplete] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [currentTransaction, setCurrentTransaction] = useState<any>(null);
-  const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
+  const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false); 
+  const receiptRef = useRef<HTMLDivElement>(null);
   
   // Get transactions for the selected date
   const { transactions, loading: transactionsLoading, error: transactionsError } = usePOSTransactions(selectedDate);
@@ -232,11 +230,16 @@ const POSSystem = () => {
       // Show success message
       toast({
         title: "Transaksi Berhasil",
-        description: "Pembayaran telah diproses dan transaksi disimpan",
+        description: "Pembayaran telah diproses dan transaksi disimpan. Struk akan ditampilkan.",
       });
       
       // Reset state
       setIsTransactionComplete(true);
+      
+      // Automatically show receipt after transaction is complete
+      setTimeout(() => {
+        setIsReceiptDialogOpen(true);
+      }, 500);
       
     } catch (error) {
       console.error('Error processing payment:', error);
@@ -286,8 +289,150 @@ const POSSystem = () => {
   };
 
   // Print receipt
-  const printReceipt = () => {
-    window.print();
+  const printReceipt = async () => {
+    if (!receiptRef.current) return;
+    
+    try {
+      const originalContents = document.body.innerHTML;
+      const printContents = receiptRef.current.innerHTML;
+      
+      // Create a new window for printing
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast({
+          title: "Error",
+          description: "Tidak dapat membuka jendela cetak. Pastikan popup tidak diblokir.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Add print-specific styles
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Struk Pembayaran</title>
+            <style>
+              body {
+                font-family: 'Courier New', monospace;
+                width: 80mm; /* Standard thermal receipt width */
+                margin: 0 auto;
+                padding: 5mm;
+                font-size: 12px;
+              }
+              .receipt-header {
+                text-align: center;
+                margin-bottom: 10px;
+              }
+              .receipt-header h3 {
+                font-size: 16px;
+                margin: 0;
+              }
+              .receipt-header p {
+                margin: 2px 0;
+                font-size: 12px;
+              }
+              .divider {
+                border-top: 1px dashed #000;
+                margin: 10px 0;
+              }
+              .item {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 5px;
+              }
+              .item-details {
+                flex: 1;
+              }
+              .item-price {
+                text-align: right;
+                font-weight: bold;
+              }
+              .total-section {
+                margin-top: 10px;
+                font-weight: bold;
+              }
+              .footer {
+                text-align: center;
+                margin-top: 20px;
+                font-size: 10px;
+              }
+              @media print {
+                body {
+                  width: 100%;
+                  padding: 0;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            ${printContents}
+          </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+      printWindow.focus();
+      
+      // Print after a short delay to ensure content is loaded
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
+      
+    } catch (error) {
+      console.error('Error printing receipt:', error);
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat mencetak struk",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Download receipt as PDF
+  const downloadReceiptPDF = async () => {
+    if (!receiptRef.current) return;
+    
+    try {
+      // Dynamically import html2canvas and jsPDF
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+      
+      // Create canvas from receipt element
+      const canvas = await html2canvas(receiptRef.current, {
+        scale: 2, // Higher resolution
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      // Create PDF (80mm width typical for receipts)
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [80, 200] // Width: 80mm, Height: auto (max 200mm)
+      });
+      
+      // Add image to PDF
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, 80, 0);
+      
+      // Save PDF
+      pdf.save(`struk-${currentTransaction?.id.slice(0, 8)}.pdf`);
+      
+      toast({
+        title: "Berhasil",
+        description: "Struk berhasil diunduh sebagai PDF",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat mengunduh struk sebagai PDF",
+        variant: "destructive"
+      });
+    }
   };
 
   // Render error state
@@ -763,6 +908,13 @@ const POSSystem = () => {
                 <Button 
                   variant="outline" 
                   className="sm:flex-1"
+                  onClick={completeTransaction}
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Tutup
+                </Button>
+                <Button 
+                  className="sm:flex-1 bg-green-600 hover:bg-green-700"
                   onClick={() => {
                     setIsReceiptDialogOpen(true);
                     setIsCheckoutDialogOpen(false);
@@ -771,13 +923,6 @@ const POSSystem = () => {
                   <Receipt className="w-4 h-4 mr-2" />
                   Lihat Struk
                 </Button>
-                <Button 
-                  className="sm:flex-1 bg-green-600 hover:bg-green-700"
-                  onClick={completeTransaction}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Transaksi Baru
-                </Button>
               </DialogFooter>
             </>
           )}
@@ -785,87 +930,123 @@ const POSSystem = () => {
       </Dialog>
 
       {/* Receipt Dialog */}
-      <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog 
+        open={isReceiptDialogOpen} 
+        onOpenChange={(open) => {
+          setIsReceiptDialogOpen(open);
+          if (!open && isTransactionComplete) {
+            completeTransaction();
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md print:shadow-none print:border-none">
           <DialogHeader>
             <DialogTitle>Struk Pembayaran</DialogTitle>
           </DialogHeader>
           
           {currentTransaction && (
-            <div className="py-4" id="receipt-to-print">
-              <div className="text-center mb-4">
-                <h3 className="font-bold text-lg">Injapan Food</h3>
-                <p className="text-sm text-gray-600">Makanan Indonesia di Jepang</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {formatDate(currentTransaction.createdAt)}
-                </p>
-                <p className="text-xs text-gray-500">
-                  ID: {currentTransaction.id.slice(0, 8)}
-                </p>
-              </div>
-              
-              <Separator className="my-4" />
-              
-              <div className="space-y-2 mb-4">
-                {currentTransaction.items.map((item: any, index: number) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <div>
-                      <span>{item.product.name}</span>
-                      <div className="text-xs text-gray-500">
-                        {formatCurrency(item.price)} x {item.quantity}
+            <div className="py-4" ref={receiptRef}>
+              <div className="font-mono" style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
+                <div className="text-center mb-4">
+                  <h3 className="font-bold text-lg">INJAPAN FOOD</h3>
+                  <p className="text-sm">POS KASIR (JULI 2025)</p>
+                  <div className="border-t border-b border-dashed my-2 py-1">
+                    <p className="text-xs">
+                      {formatDate(currentTransaction.createdAt)}
+                    </p>
+                    <p className="text-xs">
+                      Kasir: {currentTransaction.cashierName.split('@')[0]}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="text-sm mb-4">
+                  <div className="flex justify-between font-bold border-b border-dashed pb-1 mb-2">
+                    <span>Produk</span>
+                    <div className="flex space-x-2">
+                      <span>Qty</span>
+                      <span>Harga</span>
+                      <span>Subtotal</span>
+                    </div>
+                  </div>
+                  
+                  {currentTransaction.items.map((item: any, index: number) => (
+                    <div key={index} className="flex justify-between text-xs mb-2">
+                      <div className="max-w-[120px] truncate">
+                        {item.product.name}
+                      </div>
+                      <div className="flex space-x-2">
+                        <span className="w-6 text-center">{item.quantity}</span>
+                        <span className="w-16 text-right">{formatCurrency(item.price)}</span>
+                        <span className="w-16 text-right font-medium">{formatCurrency(item.totalPrice)}</span>
                       </div>
                     </div>
-                    <span className="font-medium">{formatCurrency(item.totalPrice)}</span>
+                  ))}
+                </div>
+                
+                <div className="border-t border-dashed pt-2 mb-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-bold">Total</span>
+                    <span className="font-bold">{formatCurrency(currentTransaction.totalAmount)}</span>
                   </div>
-                ))}
-              </div>
-              
-              <Separator className="my-4" />
-              
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="font-medium">Total:</span>
-                  <span className="font-bold">{formatCurrency(currentTransaction.totalAmount)}</span>
+                  
+                  {currentTransaction.paymentMethod === 'cash' && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span>Tunai</span>
+                        <span>{formatCurrency(currentTransaction.cashReceived)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Kembali</span>
+                        <span>{formatCurrency(currentTransaction.change)}</span>
+                      </div>
+                    </>
+                  )}
+                  
+                  <div className="flex justify-between text-xs mt-1">
+                    <span>Metode:</span>
+                    <span>
+                      {currentTransaction.paymentMethod === 'cash' ? 'Tunai' : 
+                       currentTransaction.paymentMethod === 'card' ? 'Kartu' : 
+                       currentTransaction.paymentMethod === 'qris' ? 'QRIS' : 
+                       currentTransaction.paymentMethod}
+                    </span>
+                  </div>
                 </div>
                 
-                {currentTransaction.paymentMethod === 'cash' && (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span>Tunai:</span>
-                      <span>{formatCurrency(currentTransaction.cashReceived)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Kembalian:</span>
-                      <span>{formatCurrency(currentTransaction.change)}</span>
-                    </div>
-                  </>
-                )}
-                
-                <div className="flex justify-between text-sm">
-                  <span>Metode Pembayaran:</span>
-                  <span>
-                    {currentTransaction.paymentMethod === 'cash' ? 'Tunai' : 
-                     currentTransaction.paymentMethod === 'card' ? 'Kartu' : 
-                     currentTransaction.paymentMethod === 'qris' ? 'QRIS' : 
-                     currentTransaction.paymentMethod}
-                  </span>
+                <div className="text-center text-xs mt-4">
+                  <p className="font-medium">Terima kasih!</p>
+                  <p className="text-[10px] mt-1">ID: {currentTransaction.id.slice(0, 8)}</p>
                 </div>
-              </div>
-              
-              <Separator className="my-4" />
-              
-              <div className="text-center text-xs text-gray-500">
-                <p>Terima kasih telah berbelanja di Injapan Food</p>
-                <p>Kasir: {currentTransaction.cashierName}</p>
               </div>
             </div>
           )}
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsReceiptDialogOpen(false)}>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsReceiptDialogOpen(false);
+                if (isTransactionComplete) {
+                  completeTransaction();
+                }
+              }}
+              className="sm:flex-1"
+            >
               Tutup
             </Button>
-            <Button onClick={printReceipt}>
+            <Button 
+              onClick={downloadReceiptPDF} 
+              variant="outline"
+              className="sm:flex-1"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download PDF
+            </Button>
+            <Button 
+              onClick={printReceipt}
+              className="sm:flex-1 bg-green-600 hover:bg-green-700"
+            >
               <Printer className="w-4 h-4 mr-2" />
               Print Struk
             </Button>
