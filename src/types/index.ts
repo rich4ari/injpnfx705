@@ -195,3 +195,23 @@ export interface PaymentProof {
   verified_by?: string;
   status: 'pending' | 'verified' | 'rejected';
 }
+
+// POS Transaction interface
+export interface POSTransaction {
+  id: string;
+  items: Array<{
+    id: string;
+    product: Product;
+    quantity: number;
+    price: number;
+    totalPrice: number;
+  }>;
+  totalAmount: number;
+  paymentMethod: string;
+  cashReceived?: number;
+  change?: number;
+  status: 'completed' | 'cancelled';
+  createdAt: string;
+  cashierId: string;
+  cashierName: string;
+}

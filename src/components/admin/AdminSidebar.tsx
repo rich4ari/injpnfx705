@@ -10,7 +10,8 @@ import {
   Truck,
   CreditCard,
   Percent,
-  DollarSign
+  DollarSign,
+  ShoppingBag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -70,6 +71,12 @@ const AdminSidebar = () => {
       href: '/admin/financial-reports',
       icon: DollarSign,
       description: 'Financial reports'
+    },
+    {
+      title: 'POS Kasir',
+      href: '/admin/pos',
+      icon: ShoppingBag,
+      description: 'Point of sale'
     },
     {
       title: 'Import/Export',
