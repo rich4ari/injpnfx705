@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Build script for production deployment
