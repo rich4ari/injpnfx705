@@ -98,6 +98,7 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
   // Subscribe to real-time updates
   useEffect(() => {
     if (!user || !affiliate) return;
+    console.log('Setting up affiliate subscriptions for user:', user.uid);
 
     let unsubscribeStats: (() => void) | undefined;
     let unsubscribeReferrals: (() => void) | undefined;
@@ -110,6 +111,7 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
         unsubscribeStats = subscribeToAffiliateStats(
           affiliate.id,
           (updatedAffiliate) => {
+            console.log('Received affiliate stats update');
             setAffiliate(updatedAffiliate);
           }
         );
@@ -167,6 +169,7 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
         unsubscribeCommissions = subscribeToAffiliateCommissions(
           affiliate.id,
           (updatedCommissions) => {
+            console.log('Received updated commissions:', updatedCommissions.length);
             setCommissions(updatedCommissions);
           }
         );
@@ -179,6 +182,7 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
         unsubscribePayouts = subscribeToAffiliatePayouts(
           affiliate.id,
           (updatedPayouts) => {
+            console.log('Received updated payouts:', updatedPayouts.length);
             setPayouts(updatedPayouts);
           }
         );
@@ -193,8 +197,9 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
     return () => {
       if (unsubscribeStats) unsubscribeStats();
       if (unsubscribeReferrals) unsubscribeReferrals();
-      if (unsubscribeCommissions) unsubscribeCommissions(); 
-      if (unsubscribePayouts) unsubscribePayouts(); 
+      if (unsubscribeCommissions) unsubscribeCommissions();
+      if (unsubscribePayouts) unsubscribePayouts();
+      console.log('Cleaned up affiliate subscriptions');
     };
   }, [user, affiliate]);
 

@@ -145,9 +145,11 @@ export const getAffiliateByReferralCode = async (referralCode: string): Promise<
 // Track referral click
 export const trackReferralClick = async (referralCode: string, visitorId: string): Promise<string> => {
   try {
+    console.log('Tracking referral click:', { referralCode, visitorId });
     // Check if referral code exists
     const affiliate = await getAffiliateByReferralCode(referralCode);
     if (!affiliate) {
+      console.warn('Invalid referral code:', referralCode);
       throw new Error('Invalid referral code');
     }
     
@@ -189,7 +191,8 @@ export const trackReferralClick = async (referralCode: string, visitorId: string
     return referralDocRef.id;
   } catch (error) {
     console.error('Error tracking referral click:', error);
-    throw error;
+    // Return a dummy ID instead of throwing to prevent app crashes
+    return `error-${Date.now()}`;
   }
 };
 
@@ -206,6 +209,7 @@ export const registerWithReferral = async (
     // Get affiliate by referral code
     const affiliate = await getAffiliateByReferralCode(referralCode);
     if (!affiliate) {
+      console.warn('Invalid referral code during registration:', referralCode);
       throw new Error('Invalid referral code');
     }
     
@@ -262,7 +266,7 @@ export const registerWithReferral = async (
     console.log(`Successfully registered user ${userId} with referral code ${referralCode}`);
   } catch (error) {
     console.error('Error registering with referral:', error);
-    throw error;
+    // Don't rethrow to prevent app crashes
   }
 };
 

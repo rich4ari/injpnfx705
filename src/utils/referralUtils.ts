@@ -38,6 +38,7 @@ export const isReferralCodeValid = (): boolean => {
 // Track referral click
 export const trackReferral = async (referralCode: string): Promise<void> => {
   try {
+    console.log('Attempting to track referral:', referralCode);
     // Generate a visitor ID (or use existing one)
     let visitorId = localStorage.getItem('visitorId');
     if (!visitorId) {
@@ -45,8 +46,13 @@ export const trackReferral = async (referralCode: string): Promise<void> => {
       localStorage.setItem('visitorId', visitorId);
     }
     
-    // Track the click
-    await trackReferralClick(referralCode, visitorId);
+    try {
+      // Track the click
+      await trackReferralClick(referralCode, visitorId);
+    } catch (clickError) {
+      console.warn('Non-critical error tracking referral click:', clickError);
+      // Continue execution even if tracking fails
+    }
     
     // Store the referral code
     storeReferralCode(referralCode);
@@ -77,16 +83,24 @@ export const trackReferral = async (referralCode: string): Promise<void> => {
 // Check and process referral code from URL
 export const processReferralCode = async (): Promise<void> => {
   try {
+    console.log('Processing referral code from URL');
     const referralCode = getReferralCodeFromUrl();
     
     if (referralCode) {
       console.log('Found referral code in URL:', referralCode);
-      await trackReferral(referralCode);
+      try {
+        await trackReferral(referralCode);
+      } catch (error) {
+        console.warn('Error tracking referral, but continuing execution:', error);
+        // Store the code anyway even if tracking fails
+        storeReferralCode(referralCode);
+      }
     } else {
       console.log('No referral code found in URL');
     }
   } catch (error) {
     console.error('Error processing referral code:', error);
+    // Don't rethrow to prevent app from crashing
   }
 };
 
