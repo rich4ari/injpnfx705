@@ -30,7 +30,11 @@ const ReferralLinkCard = () => {
           url: referralLink,
         });
       } catch (error) {
-        console.error('Error sharing:', error);
+        copyReferralLink();
+        toast({
+          title: 'Link disalin!',
+          description: 'Dialog berbagi tidak dapat dibuka. Link affiliate berhasil disalin ke clipboard sebagai alternatif.',
+        });
       }
     } else {
       handleCopyLink();
