@@ -66,6 +66,7 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
     const loadInitialData = async () => {
       if (!user) {
         setLoading(false);
+        setError('User not authenticated');
         return;
       }
 
@@ -76,15 +77,18 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
         // Get affiliate settings
         const settingsData = await getAffiliateSettings();
         setSettings(settingsData);
+        console.log('Loaded affiliate settings:', settingsData);
         
         // Get all affiliates
         const affiliatesData = await getAllAffiliates();
         setAffiliates(affiliatesData);
+        console.log('Loaded affiliates data:', affiliatesData.length);
         
         // Get all payouts
         const payoutsData = await getAllPayouts();
         setPayouts(payoutsData);
         setAllPayouts(payoutsData);
+        console.log('Loaded payouts data:', payoutsData.length);
         
         // Get all referrals
         const referralsRef = collection(db, 'affiliate_referrals');
@@ -94,7 +98,14 @@ export const AffiliateAdminProvider = ({ children }: { children: React.ReactNode
         const referralsData = referralsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        } as AffiliateReferral));
+        } as AffiliateReferral)).sort((a, b) => {
+          // Sort manually by createdAt in descending order
+          const aDate = new Date(a.createdAt || 0).getTime();
+          const bDate = new Date(b.createdAt || 0).getTime();
+          return bDate - aDate;
+        });
+        
+        console.log('Loaded referrals data:', referralsData.length);
         setReferrals(referralsData);
         setAllReferrals(referralsData);
         

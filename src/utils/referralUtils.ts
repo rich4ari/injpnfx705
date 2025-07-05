@@ -38,7 +38,7 @@ export const isReferralCodeValid = (): boolean => {
 // Track referral click
 export const trackReferral = async (referralCode: string): Promise<void> => {
   try {
-    console.log('Attempting to track referral:', referralCode);
+    console.log('Attempting to track referral code:', referralCode);
     // Generate a visitor ID (or use existing one)
     let visitorId = localStorage.getItem('visitorId');
     if (!visitorId) {
@@ -49,15 +49,15 @@ export const trackReferral = async (referralCode: string): Promise<void> => {
     try {
       // Track the click
       await trackReferralClick(referralCode, visitorId);
+      console.log('Successfully tracked referral click');
     } catch (clickError) {
-      console.warn('Non-critical error tracking referral click:', clickError);
+      console.warn('Non-critical error tracking referral click (continuing):', clickError);
       // Continue execution even if tracking fails
     }
     
     // Store the referral code
     storeReferralCode(referralCode);
-    
-    console.log('Referral tracked successfully:', referralCode);
+    console.log('Referral code stored successfully:', referralCode);
     
     // If user is already logged in, register them with the referral
     const currentUser = auth.currentUser;
@@ -83,7 +83,7 @@ export const trackReferral = async (referralCode: string): Promise<void> => {
 // Check and process referral code from URL
 export const processReferralCode = async (): Promise<void> => {
   try {
-    console.log('Processing referral code from URL');
+    console.log('Checking for referral code in URL');
     const referralCode = getReferralCodeFromUrl();
     
     if (referralCode) {
@@ -91,7 +91,7 @@ export const processReferralCode = async (): Promise<void> => {
       try {
         await trackReferral(referralCode);
       } catch (error) {
-        console.warn('Error tracking referral, but continuing execution:', error);
+        console.warn('Error in referral tracking, continuing with code storage:', error);
         // Store the code anyway even if tracking fails
         storeReferralCode(referralCode);
       }

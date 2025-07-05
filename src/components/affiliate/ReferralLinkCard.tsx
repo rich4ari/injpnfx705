@@ -24,16 +24,22 @@ const ReferralLinkCard = () => {
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: 'Injapan Food Affiliate',
-          text: 'Belanja makanan Indonesia di Jepang dan dapatkan diskon dengan kode referral saya!',
-          url: referralLink,
-        });
+        // Check if we're in a secure context (https)
+        if (window.location.protocol === 'https:') {
+          await navigator.share({
+            title: 'Injapan Food Affiliate',
+            text: 'Belanja makanan Indonesia di Jepang dan dapatkan diskon dengan kode referral saya!',
+            url: referralLink,
+          });
+        } else {
+          // Fallback for non-secure contexts
+          throw new Error('Share API requires HTTPS');
+        }
       } catch (error) {
         copyReferralLink();
         toast({
-          title: 'Link disalin!',
-          description: 'Dialog berbagi tidak dapat dibuka. Link affiliate berhasil disalin ke clipboard sebagai alternatif.',
+          title: t('affiliate.linkCopied'),
+          description: 'Dialog berbagi tidak tersedia. Link telah disalin ke clipboard.',
         });
       }
     } else {

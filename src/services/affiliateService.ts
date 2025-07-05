@@ -146,6 +146,10 @@ export const getAffiliateByReferralCode = async (referralCode: string): Promise<
 export const trackReferralClick = async (referralCode: string, visitorId: string): Promise<string> => {
   try {
     console.log('Tracking referral click:', { referralCode, visitorId });
+    
+    // Create a fallback ID in case of errors
+    const fallbackId = `fallback-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    
     // Check if referral code exists
     const affiliate = await getAffiliateByReferralCode(referralCode);
     if (!affiliate) {
@@ -156,16 +160,20 @@ export const trackReferralClick = async (referralCode: string, visitorId: string
     // Check if this visitor has already clicked this referral link
     const referralsRef = collection(db, REFERRALS_COLLECTION);
     const q = query(
-      referralsRef, 
-      where('referralCode', '==', referralCode),
-      where('visitorId', '==', visitorId)
+      referralsRef,
+      where('referralCode', '==', referralCode)
     );
     
     const querySnapshot = await getDocs(q);
     
-    if (!querySnapshot.empty) {
+    // Check if this visitor has already clicked in the results
+    const existingClick = querySnapshot.docs.find(doc => 
+      doc.data().visitorId === visitorId
+    );
+    
+    if (existingClick) {
       // Already clicked, just return the ID
-      return querySnapshot.docs[0].id;
+      return existingClick.id;
     }
     
     // Create new referral click
@@ -180,7 +188,15 @@ export const trackReferralClick = async (referralCode: string, visitorId: string
     };
     
     // Add to referrals collection
-    const referralDocRef = await addDoc(collection(db, REFERRALS_COLLECTION), newReferral);
+    let referralDocRef;
+    try {
+      referralDocRef = await addDoc(collection(db, REFERRALS_COLLECTION), newReferral);
+    } catch (addDocError) {
+      console.error('Error adding referral document:', addDocError);
+      // Return fallback ID instead of throwing
+      return fallbackId;
+    }
+    
     
     // Update affiliate stats
     await updateDoc(doc(db, AFFILIATES_COLLECTION, affiliate.id), {
@@ -191,7 +207,8 @@ export const trackReferralClick = async (referralCode: string, visitorId: string
     return referralDocRef.id;
   } catch (error) {
     console.error('Error tracking referral click:', error);
-    // Return a dummy ID instead of throwing to prevent app crashes
+    // Return a fallback ID instead of throwing to prevent app crashes
+    // This allows the app to continue functioning even if tracking fails
     return `error-${Date.now()}`;
   }
 };
@@ -209,8 +226,9 @@ export const registerWithReferral = async (
     // Get affiliate by referral code
     const affiliate = await getAffiliateByReferralCode(referralCode);
     if (!affiliate) {
-      console.warn('Invalid referral code during registration:', referralCode);
-      throw new Error('Invalid referral code');
+      console.warn('Invalid referral code during registration, using fallback:', referralCode);
+      // Don't throw, just return to allow registration to continue
+      return;
     }
     
     // Find the most recent click for this referral code
@@ -218,9 +236,7 @@ export const registerWithReferral = async (
     const q = query(
       referralsRef,
       where('referralCode', '==', referralCode),
-      where('status', '==', 'clicked'),
-      orderBy('createdAt', 'desc'),
-      limit(1)
+      where('status', '==', 'clicked')
     );
     
     const querySnapshot = await getDocs(q);
@@ -243,7 +259,14 @@ export const registerWithReferral = async (
       await addDoc(collection(db, REFERRALS_COLLECTION), newReferral);
     } else {
       // Update existing referral with user info
-      const referralDoc = querySnapshot.docs[0];
+      // Sort manually to get the most recent one
+      const sortedDocs = querySnapshot.docs.sort((a, b) => {
+        const aDate = new Date(a.data().createdAt || 0);
+        const bDate = new Date(b.data().createdAt || 0);
+        return bDate.getTime() - aDate.getTime();
+      });
+      
+      const referralDoc = sortedDocs[0];
       
       console.log(`Updating referral ${referralDoc.id} with user info`);
       
@@ -821,7 +844,7 @@ export const subscribeToAffiliateStats = (
 export const subscribeToAffiliateReferrals = (
   affiliateId: string,
   callback: (referrals: AffiliateReferral[]) => void 
-) => {
+): (() => void) => {
   try {
     const referralsRef = collection(db, REFERRALS_COLLECTION);
     
@@ -860,7 +883,7 @@ export const subscribeToAffiliateReferrals = (
 export const subscribeToAffiliateCommissions = (
   affiliateId: string,
   callback: (commissions: AffiliateCommission[]) => void 
-) => {
+): (() => void) => {
   try {
     const commissionsRef = collection(db, COMMISSIONS_COLLECTION);
     
@@ -898,7 +921,7 @@ export const subscribeToAffiliateCommissions = (
 export const subscribeToAffiliatePayouts = (
   affiliateId: string,
   callback: (payouts: AffiliatePayout[]) => void 
-) => {
+): (() => void) => {
   try {
     const payoutsRef = collection(db, PAYOUTS_COLLECTION);
     

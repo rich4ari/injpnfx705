@@ -206,7 +206,11 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
   // Join affiliate program
   const joinAffiliate = async () => {
     if (!user) {
-      setError('You must be logged in to join the affiliate program');
+      toast({
+        title: "Login Required",
+        description: "You must be logged in to join the affiliate program",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -236,7 +240,11 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
     accountName: string;
   }) => {
     if (!user || !affiliate) {
-      setError('You must be logged in and joined the affiliate program');
+      toast({
+        title: "Error",
+        description: "You must be logged in and joined the affiliate program",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -262,7 +270,12 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
   // Request payout
   const requestPayoutFn = async (amount: number, method: string, bankInfo?: any) => {
     if (!user || !affiliate) {
-      throw new Error('You must be logged in and joined the affiliate program');
+      toast({
+        title: "Error",
+        description: "You must be logged in and joined the affiliate program",
+        variant: "destructive"
+      });
+      return "";
     }
 
     try {
@@ -283,7 +296,11 @@ export const AffiliateProvider = ({ children }: { children: React.ReactNode }) =
   // Copy referral link
   const copyReferralLink = () => {
     if (!referralLink) {
-      setError('No referral link available');
+      toast({
+        title: "Error",
+        description: "No referral link available",
+        variant: "destructive"
+      });
       return;
     }
 
