@@ -7,7 +7,7 @@ echo "🏗️ Building Injapan Food for production..."
 
 # Install dependencies
 echo "📦 Installing dependencies..."
-npm ci
+npm install
 
 # Run production build
 echo "🔨 Creating production build..."
